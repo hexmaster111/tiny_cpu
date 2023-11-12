@@ -58,6 +58,14 @@ HALT
 LBL CALL_DEMO
 SETREG GP_I32_0 0x69
 RET
+
+/*00:*/ 0xA3, 0x0D, 0x00, 0x00, 0x00,        //CALL CALL_DEMO 
+/*05:*/ 0xA3, 0x00, 0x00, 0x00, 0x00,        //CALL 0 
+/*0a:*/ 0xA4, 0x04,                          //CALL GP_I32_0 
+/*0c:*/ 0xFF,                                //HALT  
+/*0d:*/ 0xA6,                                //LBL CALL_DEMO 
+/*0e:*/ 0x01, 0x69, 0x00, 0x00, 0x00, 0x00,  //SETREG GP_I32_0 69
+/*14:*/ 0xA5,                                //RET  
 ```
 
 ```ASM

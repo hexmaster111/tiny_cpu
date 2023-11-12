@@ -6,15 +6,7 @@ public class TinyCpu
     public CpuRegisters Reg = new();
     public Stack<int> CallStack = new();
 
-    public byte[] TCpuExe = new byte[]
-    {
-        /*00*/ 0x01, 0x05, 0x01, 0x00, 0x00, 0x00, //SETREG_R_C GP_I_1 1
-        /*06*/ 0xA6, //CALL_TARGET
-        /*07*/ 0x00, //NOOP
-        /*08*/ 0x03, 0x05, 0x02, 0x00, 0x00, 0x00, //ADD_R_C GP_I_1 2
-        /*0E*/ 0xA3, 0x06, 0x00, 0x00, 0x00, //CALL 0x06
-        /*13*/ 0xA5 //HALT
-    };
+    public byte[] TCpuExe = Array.Empty<byte>();
 
     private int ReadInstructionIntAbs(int index) => BitConverter.ToInt32(TCpuExe, index);
     private byte ReadInstructionByteAbs(int index) => TCpuExe[index];
@@ -122,7 +114,7 @@ public class TinyCpu
             }
             case OpCode.RET:
                 RetInternal();
-                return; //Modifys inst ptr directly (no inc)
+                break;
             case OpCode.CALL_D:
                 break;
             default:
@@ -174,8 +166,9 @@ public class TinyCpu
         var currInst = (OpCode)ReadInstructionByteRel(0);
         Console.WriteLine($"Current Instruction :{currInst}");
     }
-}
 
+    public void LoadProgram(byte[] bytes) => TCpuExe = bytes;
+}
 
 public enum OpCode : byte
 {
@@ -237,7 +230,6 @@ public static class Ext
     }
 }
 
-
 public enum FLAGS_0_USAGE
 {
     F0_HALT = 0,
@@ -253,7 +245,6 @@ public enum RegisterIndex : byte
     GP_I32_1 = 5,
     GP_I32_2 = 6,
 }
-
 
 public struct CpuRegisters
 {

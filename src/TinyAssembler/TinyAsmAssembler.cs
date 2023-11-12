@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Reflection.Emit;
 using TinyCpuLib;
 using OpCode = TinyCpuLib.OpCode;
@@ -7,16 +8,13 @@ namespace TinyAssembler;
 
 public class TinyAsmAssembler
 {
-    public byte[] Assembly { get; private set; }
-
-    public TinyAsmAssembler(ImmutableArray<TinyAsmTokenizer.Token> tokens)
-    {
-        Tokens = tokens;
-        Assembly = Array.Empty<byte>();
-    }
+    public byte[] Assembly { get; private set; } = Array.Empty<byte>();
 
     public ImmutableArray<TinyAsmTokenizer.Token> Tokens { get; private set; }
-    internal AsmToken[] AsmTokens { get; private set; }
+    public AsmToken[] AsmTokens { get; private set; } = Array.Empty<AsmToken>();
+
+    public TinyAsmAssembler(ImmutableArray<TinyAsmTokenizer.Token> tokens) => Tokens = tokens;
+
 
     public byte[] Assemble()
     {
@@ -25,70 +23,149 @@ public class TinyAsmAssembler
         //Some tokens need to know where tokens in fount of it will be, hence the two step process
         FinishTokens();
 
-        return Assembly;
+        List<byte> output = new();
+        foreach (var at in AsmTokens)
+        {
+            if (!at.IsFrozen) Console.WriteLine($"[WARN] Token {at.Token} Not Final");
+            output.AddRange(at.GetReadOnlyData());
+        }
+
+        return Assembly = output.ToArray();
     }
 
     private void FinishTokens()
     {
         foreach (var t in AsmTokens)
         {
-            if (t.Token.Type == TinyAsmTokenizer.Token.TokenType.CALL) FixCall(t);
-            continue;
-
-            void FixCall(AsmToken asmToken)
+            switch (t.Token.Type)
             {
-                if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.CONST)
-                {
-                    var data = asmToken.GetData();
-                    data[0] = (byte)OpCode.CALL_C;
-                    var dataBytes = BitConverter.GetBytes(GetIntConst(asmToken.Token.ArgZeroData));
-                    data[1] = dataBytes[0];
-                    data[2] = dataBytes[1];
-                    data[3] = dataBytes[2];
-                    data[4] = dataBytes[3];
-                }
-                else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.REGISTER)
-                {
-                    var data = asmToken.GetData();
-                    data[0] = (byte)OpCode.CALL_R;
-                    var regIndex = Enum.Parse<RegisterIndex>(asmToken.Token.ArgZeroData);
-                    data[1] = (byte)regIndex;
-                }
-                else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.STR)
-                {
-                    var targetInst = AsmTokens.Where(x => x.Token is
-                    {
-                        Type: TinyAsmTokenizer.Token.TokenType.LBL,
-                        ArgumentZeroType: TinyAsmTokenizer.Token.ArgumentType.STR
-                    }).ToImmutableArray();
+                case TinyAsmTokenizer.Token.TokenType.ADD:
+                case TinyAsmTokenizer.Token.TokenType.SUB:
+                case TinyAsmTokenizer.Token.TokenType.DIV:
+                case TinyAsmTokenizer.Token.TokenType.MUL:
+                    throw new NotImplementedException("TODO: Assemble math instructions");
 
-                    if (!targetInst.Any())
-                    {
-                        throw new InvalidParameterException($"Label \"{asmToken.Token.ArgZeroData}\" was not found");
-                    }
 
-                    if (targetInst.Length > 1)
-                    {
-                        throw new InvalidParameterException(
-                            $"Label \"{asmToken.Token.ArgZeroData}\" was found more then once");
-                    }
-
-                    var lbl = targetInst.First();
-                    var addressDataBytes = GetIntConst(GetInstAddress(lbl));
-                    var data = asmToken.GetData();
-                    data[0] = (byte)OpCode.CALL_C;
-                    data[1] = addressDataBytes[0];
-                    data[2] = addressDataBytes[1];
-                    data[3] = addressDataBytes[2];
-                    data[4] = addressDataBytes[3];
-                }
-
-                asmToken.Freeze(); //Mark any call as Ready for output
+                case TinyAsmTokenizer.Token.TokenType.SETREG:
+                    FixSetReg(t);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.CALL:
+                    FixCall(t);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.HALT:
+                case TinyAsmTokenizer.Token.TokenType.LBL:
+                case TinyAsmTokenizer.Token.TokenType.NOOP:
+                case TinyAsmTokenizer.Token.TokenType.RET:
+                    t.Freeze();
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.NONE:
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
+            continue;
         }
     }
 
-    private int GetInstAddress(AsmToken lbl)
+    private void FixCall(AsmToken asmToken)
+    {
+        if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        {
+            var data = asmToken.GetData();
+            data[0] = (byte)OpCode.CALL_C;
+            var dataBytes = BitConverter.GetBytes(GetIntConst(asmToken.Token.ArgumentZeroData));
+            data[1] = dataBytes[0];
+            data[2] = dataBytes[1];
+            data[3] = dataBytes[2];
+            data[4] = dataBytes[3];
+        }
+        else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+        {
+            var data = asmToken.GetData();
+            data[0] = (byte)OpCode.CALL_R;
+            var regIndex = Enum.Parse<RegisterIndex>(asmToken.Token.ArgumentZeroData);
+            data[1] = (byte)regIndex;
+        }
+        else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.STR)
+        {
+            var targetInst = AsmTokens.Where(x => x.Token is
+            {
+                Type: TinyAsmTokenizer.Token.TokenType.LBL,
+                ArgumentZeroType: TinyAsmTokenizer.Token.ArgumentType.STR
+            }).ToImmutableArray();
+
+            if (!targetInst.Any())
+            {
+                throw new InvalidParameterException($"Label \"{asmToken.Token.ArgumentZeroData}\" was not found");
+            }
+
+            if (targetInst.Length > 1)
+            {
+                throw new InvalidParameterException(
+                    $"Label \"{asmToken.Token.ArgumentZeroData}\" was found more then once");
+            }
+
+            var lbl = targetInst.First();
+            var addressDataBytes = GetIntConst(GetInstAddress(lbl));
+            var data = asmToken.GetData();
+            data[0] = (byte)OpCode.CALL_C;
+            data[1] = addressDataBytes[0];
+            data[2] = addressDataBytes[1];
+            data[3] = addressDataBytes[2];
+            data[4] = addressDataBytes[3];
+        }
+
+        asmToken.Freeze(); //Mark any call as Ready for output
+    }
+
+    private void FixSetReg(AsmToken asmToken)
+    {
+        if (asmToken.Token.ArgumentZeroType is not TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+        {
+            throw new ArgumentException(
+                $"First Arg of SetReg must be of type REGISTER, got {asmToken.Token.ArgumentZeroType}:" +
+                $"\"{asmToken.Token.ArgumentZeroData}\"");
+        }
+
+        var argOneType = asmToken.Token.ArgumentOneType;
+        var argOneData = asmToken.Token.ArgumentOneData;
+
+        var argData = argOneType switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(argOneData)),
+            TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[] { GetRegisterByteConst(argOneData) },
+            TinyAsmTokenizer.Token.ArgumentType.STR => throw new Exception("String arg not valid with set register"),
+            TinyAsmTokenizer.Token.ArgumentType.NONE => throw new Exception("Expected a register or a constant"),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var data = asmToken.GetData();
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        data[0] = argOneType switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)OpCode.SETREG_R_C,
+            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)OpCode.SETREG_R_R,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (argOneType == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        {
+            data[1] = argData[0];
+            data[2] = argData[1];
+            data[3] = argData[2];
+            data[4] = argData[3];
+        }
+        else
+        {
+            data[1] = argData[0];
+        }
+
+        asmToken.Freeze();
+    }
+
+    private byte GetRegisterByteConst(string argData) => (byte)Enum.Parse<RegisterIndex>(argData);
+
+    public int GetInstAddress(AsmToken lbl)
     {
         var addressAcm = 0;
         foreach (var t in AsmTokens)
@@ -104,7 +181,7 @@ public class TinyAsmAssembler
     private static int GetIntConst(string constTokenData) => Convert.ToInt32(constTokenData, 16);
 }
 
-internal class AsmToken : IFreezable
+public class AsmToken : IFreezable
 {
     public TinyAsmTokenizer.Token Token { get; init; }
 
@@ -147,8 +224,8 @@ internal class AsmToken : IFreezable
 
     private static int GetTokenSize(TinyAsmTokenizer.Token token)
     {
-        var argZeroSize = GetArgSize(token.ArgumentZeroType, token.ArgZeroData, token);
-        var argOneSize = GetArgSize(token.ArgumentOneType, token.ArgOneData, token);
+        var argZeroSize = GetArgSize(token.ArgumentZeroType, token.ArgumentZeroData, token);
+        var argOneSize = GetArgSize(token.ArgumentOneType, token.ArgumentOneData, token);
 
         return argZeroSize + argOneSize + 1; //+1 for opcode
     }
@@ -191,12 +268,6 @@ internal class AsmToken : IFreezable
     public void Freeze() => IsFrozen = true;
 
     public ImmutableArray<byte> GetReadOnlyData() => _data.ToImmutableArray();
-}
-
-internal interface IFreezable
-{
-    public bool IsFrozen { get; }
-    public void Freeze();
 }
 
 public class InvalidParameterException : Exception

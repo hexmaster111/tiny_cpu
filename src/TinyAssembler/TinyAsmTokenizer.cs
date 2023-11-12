@@ -25,8 +25,8 @@ public class TinyAsmTokenizer
         Token.TokenType Type,
         Token.ArgumentType ArgumentZeroType = Token.ArgumentType.NONE,
         Token.ArgumentType ArgumentOneType = Token.ArgumentType.NONE,
-        string ArgZeroData = "",
-        string ArgOneData = ""
+        string ArgumentZeroData = "",
+        string ArgumentOneData = ""
     )
     {
         public static Token? FromLine(string line)
