@@ -1,7 +1,8 @@
 
 REGISTER TABLE
+
 | LOCATION | Register Name | Use                                    |
-| -------: | ------------- | -------------------------------------- |
+|---------:|---------------|----------------------------------------|
 |       00 | INST_PTR      | PTR TO NEXT INSTRUCTION TO BE EXECUTED |
 |       01 | FLAGS_0       | SEE FLAGS_0 USAGE TABLE                |
 |       02 | RESERVED      | RESERVED                               |
@@ -14,14 +15,14 @@ REGISTER TABLE
 
 
 FLAGS_0 USAGE TABLE
-|  BIT | NAME | USE                      |
-| ---: | ---- | ------------------------ |
-|   00 | HALT | TRUE AFTER 'HALT' IS RAN |
+|  BIT | NAME | USE                 |
+| ---: | ---- | ------------------- |
+|   00 | HALT | TRUE AFTER HALT RAN |
 
 
 
 | OPPCODE | NAME       | ARG 0                | ARG 1                | NOTES                                | IMPLED |
-| ------: | ---------- | -------------------- | -------------------- | ------------------------------------ | ------ |
+|--------:|------------|----------------------|----------------------|--------------------------------------|--------|
 |      00 | NOOP       |                      |                      |                                      | x      |
 |      01 | SETREG_R_C | [DST] REGISTER       | [SRC] CONSTANT VALUE | SETS REGISTER TO CONSTANT            | x      |
 |      02 | SETREG_R_R | [DST] REGISTER 1     | [SRC] REGISTER  0    | MOVES VAL IN R0 INTO R1              | x      |
@@ -41,14 +42,29 @@ FLAGS_0 USAGE TABLE
 |      A0 | PUSH C     | [SRC] CONSTANT VALUE |                      | pushes the value into stack          |
 |      A1 | PUSH R     | [SRC] REGISTER       |                      | pushes the value into stack          |
 |      A2 | POP R      | [DST] REGISTER       |                      | pops the current value into register |
-|      A3 | CALL       | [SRC] CONSTANT VALUE |                      | calls                                |
-|      A4 | RET        |                      |                      |                                      |
-|      A5 | HALT       |                      |                      |                                      |
+|      A3 | CALL       | [SRC] CONSTANT VALUE |                      | calls the constants offset in memory |
+|      A4 | CALL       | [SRC] ADDR IN REG    |                      | calls the constants offset in memory |
+|      A5 | RET        |                      |                      |                                      |
+|      A6 | CALL_D     |                      |                      | call must land at the call dest for  |
+|         |            |                      |                      | error checking like end branch       |
+|         |            |                      |                      | othewise noop                        |        |
+|      FF | HALT       |                      |                      |                                      |
 
 
-```VM BYTE CODE
-0: 00                     ; NOOP
-1: 01 04 00 00 00 01      ; SETREG_R_C GP_I32_0 CONST_1
-6: 02 04 05               ; SETREG_R_R GP_I32_0 CONST_1
-9: A5                     ; HALT
+```ASM
+CALL CALL_DEMO
+HALT
+LBL CALL_DEMO
+SETREG GP_I32_0 0x69
+RET
 ```
+
+```ASM
+/*00*/ 0x01, 0x05, 0x01, 0x00, 0x00, 0x00, //SETREG_R_C GP_I_1 1
+/*06*/ 0xA6,                               //CALL_TARGET
+/*07*/ 0x00,                               //NOOP
+/*08*/ 0x03, 0x05, 0x02, 0x00, 0x00, 0x00, //ADD_R_C GP_I_1 2
+/*0E*/ 0xA3, 0x06, 0x00, 0x00, 0x00,       //CALL 0x06
+/*13*/ 0xA5                                //HALT
+```
+

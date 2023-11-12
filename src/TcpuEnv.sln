@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyCpu", "TinyCpu\TinyCpu.csproj", "{D732C6E7-5D94-47CE-A836-973062D63E44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyCpuLib", "TinyCpuLib\TinyCpuLib.csproj", "{A952E722-CED9-4F41-9C40-B61224FFE9FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyAssembler", "TinyAssembler\TinyAssembler.csproj", "{9A2E3A3D-DFF6-4524-8E34-7C8BBBD6BBCC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D732C6E7-5D94-47CE-A836-973062D63E44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D732C6E7-5D94-47CE-A836-973062D63E44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D732C6E7-5D94-47CE-A836-973062D63E44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D732C6E7-5D94-47CE-A836-973062D63E44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A952E722-CED9-4F41-9C40-B61224FFE9FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A952E722-CED9-4F41-9C40-B61224FFE9FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A952E722-CED9-4F41-9C40-B61224FFE9FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A952E722-CED9-4F41-9C40-B61224FFE9FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A2E3A3D-DFF6-4524-8E34-7C8BBBD6BBCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A2E3A3D-DFF6-4524-8E34-7C8BBBD6BBCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A2E3A3D-DFF6-4524-8E34-7C8BBBD6BBCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A2E3A3D-DFF6-4524-8E34-7C8BBBD6BBCC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
