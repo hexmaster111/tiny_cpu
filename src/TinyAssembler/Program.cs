@@ -1,15 +1,17 @@
 ﻿// See https://aka.ms/new-console-template for more information
-
-using System.Diagnostics;
-using System.Globalization;
 using TinyAssembler;
+using OpCode = TinyCpuLib.OpCode;
 
 var programSectionFileLines = new string[]
 {
+    "SETREG GP_I32_0 0x69",
     "CALL CALL_DEMO ;calls out to set a register to 69",
+    "ADD GP_I32_0 0x04",
+    "SUB GP_I32_0 0x01",
+    "DIV GP_I32_0 0x01",
+    "MUL GP_I32_0 0x04",
     "HALT           ;halt the cpu",
     "LBL CALL_DEMO",
-    "SETREG GP_I32_0 0x69",
     "RET",
 };
 
@@ -30,7 +32,7 @@ foreach (var inst in asm.AsmTokens)
 
     Console.WriteLine($"/*{asm.GetInstAddress(inst):x2}:*/ " +
                       instString +
-                      $" //{inst.Token.Type} {inst.Token.ArgumentZeroData} {inst.Token.ArgumentOneData}");
+                      $"// [{(OpCode)inst.GetReadOnlyData()[0]}] {inst.Token.Type} {inst.Token.ArgumentZeroData} {inst.Token.ArgumentOneData}");
 }
 
 

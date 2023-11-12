@@ -102,19 +102,19 @@ public class TinyCpu
             case OpCode.CALL_C:
             {
                 var destAdress = ReadInstructionIntRel(1);
-                CallInternal(destAdress);
+                CallInternal(destAdress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
                 return; //Modifys inst ptr directly (no inc)
             }
             case OpCode.CALL_R:
             {
                 var destAdressReg = ReadInstructionByteRel(1);
                 var destAdress = Reg.Data[destAdressReg];
-                CallInternal(destAdress);
+                CallInternal(destAdress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
                 return; //Modifys inst ptr directly (no inc)
             }
             case OpCode.RET:
-                RetInternal();
-                break;
+                RetInternal();//Modifys inst ptr directly (no inc)
+                return;
             case OpCode.CALL_D:
                 break;
             default:
@@ -137,7 +137,7 @@ public class TinyCpu
         Reg.Data[(int)RegisterIndex.INST_PTR] = retAdress;
     }
 
-    private void CallInternal(int callAdress)
+    private void CallInternal(int callAdress, int nextAddress)
     {
         if (callAdress > TCpuExe.Length)
             throw new Exception("Call to invalid location (destnation off file)");
@@ -147,7 +147,7 @@ public class TinyCpu
         if (instAtAdress != (byte)OpCode.CALL_D)
             throw new Exception("Call to invalid location (didnt hit call_d)");
 
-        CallStack.Push(Reg.INST_PTR);
+        CallStack.Push(nextAddress);
         if (CallStack.Count() > MAX_STACK)
             throw new Exception("Stack smashed");
 
@@ -196,21 +196,21 @@ public static class Ext
     public static int GetInstructionByteCount(this OpCode c) => c switch
     {
         OpCode.NOOP => 1, //Opcode
-        OpCode.SETREG_R_C => 1 + 1 + 4, //Opcode + byte + int
-        OpCode.SETREG_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.HALT => 1, //Opcode
+        OpCode.RET => 1, //Opcode
+        OpCode.CALL_D => 1, //Opcode
+        OpCode.SETREG_R_C => 1 + 1 + 4, //Opcode + byte + int
         OpCode.ADD_R_C => 1 + 1 + 4, //Opcode + byte + int
-        OpCode.ADD_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.MUL_R_C => 1 + 1 + 4, //Opcode + byte + int
-        OpCode.MUL_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.SUB_R_C => 1 + 1 + 4, //Opcode + byte + int
-        OpCode.SUB_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.DIV_R_C => 1 + 1 + 4, //Opcode + byte + int
+        OpCode.ADD_R_R => 1 + 1 + 1, //Opcode + byte + byte
+        OpCode.SETREG_R_R => 1 + 1 + 1, //Opcode + byte + byte
+        OpCode.MUL_R_R => 1 + 1 + 1, //Opcode + byte + byte
+        OpCode.SUB_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.DIV_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.CALL_C => 1 + 4, //Opcode + int
         OpCode.CALL_R => 1 + 1, //Opcode + byte
-        OpCode.RET => 1,
-        OpCode.CALL_D => 1,
         _ => throw new Exception($"Unknown OPCODE: {c}"),
     };
 

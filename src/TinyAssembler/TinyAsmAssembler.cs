@@ -40,10 +40,17 @@ public class TinyAsmAssembler
             switch (t.Token.Type)
             {
                 case TinyAsmTokenizer.Token.TokenType.ADD:
+                    FixMathInst(t, OpCode.ADD_R_C, OpCode.ADD_R_R);
+                    break;
                 case TinyAsmTokenizer.Token.TokenType.SUB:
+                    FixMathInst(t, OpCode.SUB_R_C, OpCode.SUB_R_R);
+                    break;
                 case TinyAsmTokenizer.Token.TokenType.DIV:
+                    FixMathInst(t, OpCode.DIV_R_C, OpCode.DIV_R_R);
+                    break;
                 case TinyAsmTokenizer.Token.TokenType.MUL:
-                    throw new NotImplementedException("TODO: Assemble math instructions");
+                    FixMathInst(t, OpCode.MUL_R_C, OpCode.MUL_R_R);
+                    break;
 
 
                 case TinyAsmTokenizer.Token.TokenType.SETREG:
@@ -65,6 +72,47 @@ public class TinyAsmAssembler
 
             continue;
         }
+    }
+
+    private void FixMathInst(AsmToken token, OpCode constVerOpCode, OpCode registerVerOpCode)
+    {
+        var token0Type = token.Token.ArgumentZeroType;
+        var token1Type = token.Token.ArgumentOneType;
+
+        if (token0Type is not TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+            throw new Exception($"Arg 0 must be of type register, got {token0Type}");
+
+        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.REGISTER &&
+            token1Type != TinyAsmTokenizer.Token.ArgumentType.CONST)
+            throw new Exception($"Arg 1 must be of type register or constant, got {token1Type}");
+
+        var dstRegister = GetRegisterByteConst(token.Token.ArgumentZeroData);
+        var token1Data = token1Type switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(token.Token.ArgumentOneData)),
+            TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[] { GetRegisterByteConst(token.Token.ArgumentOneData) },
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var opCode = token1Type switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)constVerOpCode,
+            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)registerVerOpCode,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var data = token.GetData();
+        data[0] = opCode;
+        data[1] = dstRegister;
+        data[2] = token1Data[0];
+        if (token1Type == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        {
+            data[3] = token1Data[1];
+            data[4] = token1Data[2];
+            data[5] = token1Data[3];
+        }
+
+        token.Freeze();
     }
 
     private void FixCall(AsmToken asmToken)
