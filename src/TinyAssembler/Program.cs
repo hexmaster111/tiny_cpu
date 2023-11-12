@@ -7,6 +7,8 @@ using TinyAssembler;
 var programSectionFileLines = new string[]
 {
     "CALL CALL_DEMO ;calls out to set a register to 69",
+    "CALL 0x00      ;Just a test to make sure we can call constant typed values",
+    "CALL GP_I32_0  ;Just a test",
     "HALT           ;halt the cpu",
     "LBL CALL_DEMO",
     ";comment line",

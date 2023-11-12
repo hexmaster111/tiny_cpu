@@ -15,9 +15,10 @@ REGISTER TABLE
 
 
 FLAGS_0 USAGE TABLE
-|  BIT | NAME | USE                 |
-| ---: | ---- | ------------------- |
-|   00 | HALT | TRUE AFTER HALT RAN |
+
+| BIT | NAME | USE                 |
+|----:|------|---------------------|
+|  00 | HALT | TRUE AFTER HALT RAN |
 
 
 
