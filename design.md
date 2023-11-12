@@ -56,14 +56,14 @@ FLAGS_0 USAGE TABLE
 
 var programSectionFileLines = new string[]
 {
-    "SETREG GP_I32_0 0x69",
-    "CALL CALL_DEMO ;calls out to set a register to 69",
+    "CALL CALL_DEMO",
     "ADD GP_I32_0 0x04",
     "SUB GP_I32_0 0x01",
     "DIV GP_I32_0 0x01",
     "MUL GP_I32_0 0x04",
     "HALT           ;halt the cpu",
     "LBL CALL_DEMO",
+    "SETREG GP_I32_0 0x69",
     "RET",
 };
 
