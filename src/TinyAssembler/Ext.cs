@@ -12,6 +12,8 @@ public static class Ext
         TinyAsmTokenizer.Token.TokenType.CALL => 1,
         TinyAsmTokenizer.Token.TokenType.HALT => 0,
         TinyAsmTokenizer.Token.TokenType.RET => 0,
+        TinyAsmTokenizer.Token.TokenType.PUSH => 1,
+        TinyAsmTokenizer.Token.TokenType.POP => 1,
         TinyAsmTokenizer.Token.TokenType.NONE => throw new InvalidOperationException(),
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };

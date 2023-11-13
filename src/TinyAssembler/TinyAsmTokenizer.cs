@@ -63,6 +63,8 @@ public class TinyAsmTokenizer
                     TokenType.MUL => ReadToken(nextParts, cmd),
                     TokenType.LBL => ReadToken(nextParts, cmd),
                     TokenType.CALL => ReadToken(nextParts, cmd),
+                    TokenType.PUSH => ReadToken(nextParts, cmd),
+                    TokenType.POP => ReadToken(nextParts, cmd),
                     TokenType.NONE => throw new Exception("Token Parse got a NONE, this is invalid"),
                     _ => throw new ArgumentOutOfRangeException()
                 };
@@ -177,7 +179,7 @@ public class TinyAsmTokenizer
         }
 
         // @formatter:keep_existing_enum_arrangement true
-        public enum TokenType { NONE, NOOP, SETREG, ADD, SUB, DIV, MUL, LBL, CALL, HALT, RET }
+        public enum TokenType { NONE, NOOP, SETREG, ADD, SUB, DIV, MUL, LBL, CALL, HALT, RET, PUSH, POP }
 
         public enum ArgumentType { CONST, REGISTER, STR, NONE }
         // @formatter:keep_existing_enum_arrangement restore

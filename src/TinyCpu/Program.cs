@@ -18,10 +18,10 @@ internal class Program
             /*17:*/ 0x05, 0x04, 0x04, 0x00, 0x00, 0x00, // [MUL_R_C] MUL GP_I32_0 4
             /*1d:*/ 0xFF, // [HALT] HALT  
             /*1e:*/ 0xA6, // [CALL_D] LBL CALL_DEMO 
-            /*1f:*/ 0x01, 0x69, 0x00, 0x00, 0x00, 0x00, // [SETREG_R_C] SETREG GP_I32_0 69
-            0xA0, 0x50, 0x50, 0x00, 0x00, //PUSH CONST
-            0xA1, 
-            /*25:*/ 0xA5, // [RET] RET 
+            /*1f:*/ 0x01, 0x04, 0xFF, 0xFF, 0xFF, 0xFF, // [SETREG_R_C] SETREG GP_I32_0 FFFFFFFF
+            /*25:*/ 0xA0, 0xFF, 0x00, 0x00, 0x00, // [PUSH_C] PUSH FF
+            /*2a:*/ 0xA1, 0x04, // [PUSH_R] PUSH GP_I32_0
+            /*2c:*/ 0xA5, // [RET] RET
         });
 
         while (!_cpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.F0_HALT))

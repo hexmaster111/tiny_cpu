@@ -126,7 +126,7 @@ public class TinyCpu
             }
             case OpCode.PUSH_R:
             {
-                var valSrc = (RegisterIndex) ReadInstructionByteRel(1);
+                var valSrc = (RegisterIndex)ReadInstructionByteRel(1);
                 var val = Reg.Data[(int)valSrc];
                 PushValueStack(val);
                 break;
@@ -147,8 +147,7 @@ public class TinyCpu
     private void PushValueStack(int val)
     {
         ValueStack.Push(val);
-        if (ValueStack.Count > MAX_STACK)
-            throw new Exception("Value Stack Smashed!");
+        if (ValueStack.Count > MAX_STACK) throw new Exception("Value Stack Smashed!");
     }
 
 
