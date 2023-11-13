@@ -5,6 +5,7 @@ public class TinyCpu
     public const int MAX_STACK = 10;
     public CpuRegisters Reg = new();
     public Stack<int> CallStack = new();
+    public Stack<int> ValueStack = new();
 
     public byte[] TCpuExe = Array.Empty<byte>();
 
@@ -113,15 +114,41 @@ public class TinyCpu
                 return; //Modifys inst ptr directly (no inc)
             }
             case OpCode.RET:
-                RetInternal();//Modifys inst ptr directly (no inc)
+                RetInternal(); //Modifys inst ptr directly (no inc)
                 return;
             case OpCode.CALL_D:
                 break;
+            case OpCode.PUSH_C:
+            {
+                var val = ReadInstructionIntRel(1);
+                PushValueStack(val);
+                break;
+            }
+            case OpCode.PUSH_R:
+            {
+                var valSrc = (RegisterIndex) ReadInstructionByteRel(1);
+                var val = Reg.Data[(int)valSrc];
+                PushValueStack(val);
+                break;
+            }
+            case OpCode.POP_R:
+            {
+                var destReg = (RegisterIndex)ReadInstructionByteRel(1);
+                Reg.Data[(int)destReg] = ValueStack.Pop();
+                break;
+            }
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
         }
 
         Reg.Data[(int)RegisterIndex.INST_PTR] += currInst.GetInstructionByteCount();
+    }
+
+    private void PushValueStack(int val)
+    {
+        ValueStack.Push(val);
+        if (ValueStack.Count > MAX_STACK)
+            throw new Exception("Value Stack Smashed!");
     }
 
 
@@ -183,6 +210,9 @@ public enum OpCode : byte
     SUB_R_R = 0x08,
     DIV_R_C = 0x09,
     DIV_R_R = 0x0A,
+    PUSH_C = 0xA0,
+    PUSH_R = 0xA1,
+    POP_R = 0xA2,
     CALL_C = 0xA3,
     CALL_R = 0xA4,
     RET = 0xA5,
@@ -211,6 +241,9 @@ public static class Ext
         OpCode.DIV_R_R => 1 + 1 + 1, //Opcode + byte + byte
         OpCode.CALL_C => 1 + 4, //Opcode + int
         OpCode.CALL_R => 1 + 1, //Opcode + byte
+        OpCode.PUSH_C => 1 + 4, //Opcode + int
+        OpCode.PUSH_R => 1 + 1, //Opcode + byte
+        OpCode.POP_R => 1 + 1, //Opcode + byte
         _ => throw new Exception($"Unknown OPCODE: {c}"),
     };
 

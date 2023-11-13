@@ -52,20 +52,17 @@ FLAGS_0 USAGE TABLE
 |      FF | HALT       |                      |                      |                                      |
 
 
-```csharp
+```asm
 
-var programSectionFileLines = new string[]
-{
-    "CALL CALL_DEMO",
-    "ADD GP_I32_0 0x04",
-    "SUB GP_I32_0 0x01",
-    "DIV GP_I32_0 0x01",
-    "MUL GP_I32_0 0x04",
-    "HALT           ;halt the cpu",
-    "LBL CALL_DEMO",
-    "SETREG GP_I32_0 0x69",
-    "RET",
-};
+CALL CALL_DEMO
+ADD GP_I32_0 0x04
+SUB GP_I32_0 0x01
+DIV GP_I32_0 0x01
+MUL GP_I32_0 0x04
+HALT           ;halt the cpu",
+LBL CALL_DEMO
+SETREG GP_I32_0 0x69
+RET
 
 var prog = new byte[]{
 /*00:*/ 0x01, 0x69, 0x00, 0x00, 0x00, 0x00, // [SETREG_R_C] SETREG GP_I32_0 69
