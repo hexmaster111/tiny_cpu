@@ -178,7 +178,7 @@ public class TinyAsmAssembler
         var argOneType = asmToken.Token.ArgumentOneType;
         var argOneData = asmToken.Token.ArgumentOneData;
 
-        var argData = argOneType switch
+        var arg1Data = argOneType switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(argOneData)),
             TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[] { GetRegisterByteConst(argOneData) },
@@ -186,7 +186,9 @@ public class TinyAsmAssembler
             TinyAsmTokenizer.Token.ArgumentType.NONE => throw new Exception("Expected a register or a constant"),
             _ => throw new ArgumentOutOfRangeException()
         };
-
+        var argZeroData = GetRegisterByteConst(asmToken.Token.ArgumentZeroData);
+        
+        
         var data = asmToken.GetData();
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         data[0] = argOneType switch
@@ -196,16 +198,14 @@ public class TinyAsmAssembler
             _ => throw new ArgumentOutOfRangeException()
         };
 
+        data[1] = argZeroData;
+        data[2] = arg1Data[0];
+
         if (argOneType == TinyAsmTokenizer.Token.ArgumentType.CONST)
         {
-            data[1] = argData[0];
-            data[2] = argData[1];
-            data[3] = argData[2];
-            data[4] = argData[3];
-        }
-        else
-        {
-            data[1] = argData[0];
+            data[3] = arg1Data[1];
+            data[4] = arg1Data[2];
+            data[5] = arg1Data[3];
         }
 
         asmToken.Freeze();

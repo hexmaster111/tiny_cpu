@@ -12,7 +12,7 @@ var programSectionFileLines = new string[]
     "MUL GP_I32_0 0x04",
     "HALT           ;halt the cpu",
     "LBL CALL_DEMO",
-    "SETREG GP_I32_0 0x69",
+    "SETREG GP_I32_0 0xFFFFFFFF",
     "RET",
 };
 
