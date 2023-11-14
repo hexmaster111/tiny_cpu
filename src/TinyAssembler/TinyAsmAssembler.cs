@@ -67,7 +67,10 @@ public class TinyAsmAssembler
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.SETREG:
-                    FixSetReg(t);
+                    Fix_RR_RC(t, OpCode.SETREG_R_R, OpCode.SETREG_R_C);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.CMP:
+                    Fix_RR_RC(t, OpCode.CMP_R_R, OpCode.CMP_R_C);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.CALL:
                     FixCall(t);
@@ -235,12 +238,12 @@ public class TinyAsmAssembler
         asmToken.Freeze(); //Mark any call as Ready for output
     }
 
-    private void FixSetReg(AsmToken asmToken)
+    private void Fix_RR_RC(AsmToken asmToken, OpCode rr, OpCode rc)
     {
         if (asmToken.Token.ArgumentZeroType is not TinyAsmTokenizer.Token.ArgumentType.REGISTER)
         {
             throw new ArgumentException(
-                $"First Arg of SetReg must be of type REGISTER, got {asmToken.Token.ArgumentZeroType}:" +
+                $"First Arg of {asmToken.Token.Type} must be of type REGISTER, got {asmToken.Token.ArgumentZeroType}:" +
                 $"\"{asmToken.Token.ArgumentZeroData}\"");
         }
 
@@ -262,8 +265,8 @@ public class TinyAsmAssembler
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         data[0] = argOneType switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)OpCode.SETREG_R_C,
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)OpCode.SETREG_R_R,
+            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)rc,
+            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)rr,
             _ => throw new ArgumentOutOfRangeException()
         };
 

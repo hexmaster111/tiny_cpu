@@ -16,6 +16,12 @@ FLAGS_0 USAGE TABLE
 | BIT | NAME | USE                 |
 |----:|------|---------------------|
 |  00 | HALT | TRUE AFTER HALT RAN |
+|  01 | EQ   | = A==B              |
+|  02 | NEQ  | = A!=B              |
+|  03 | GTR  | = A>B               |
+|  04 | GEQ  | = A>=B              |
+|  05 | LES  | = A<B               |
+|  06 | LEQ  | = A<=B              |
 
 | OPPCODE | NAME       | ARG 0                | ARG 1                | NOTES                                | IMPLED |
 |--------:|------------|----------------------|----------------------|--------------------------------------|--------|
@@ -32,8 +38,8 @@ FLAGS_0 USAGE TABLE
 |      0A | DIV_R_R    | [DST] REGISTER 1     | [SRC] REGISTER 0     | DIVS R0 BY R1 AND STORE IN R1        | x      |
 |      0B | INC        | [DST] REGISTER       |                      | Inc register by 1                    |        |
 |      0C | DEC        | [DST] REGISTER       |                      | Dec register by 1                    |        |
-|      0D |            |                      |                      | RESERVED                             |        |
-|      0E |            |                      |                      | RESERVED                             |        |
+|      0D | CMP_R_C    | [DST] REGISTER A     | [SRC] CONST    B     | A>B     A<B    A==B                  |        |
+|      0E | CMP_R_R    | [DST] REGISTER A     | [SRC] REGISTER B     | A>B     A<B    A==B                  |        |
 |      0F |            |                      |                      | RESERVED                             |        |
 |      A0 | PUSH C     | [SRC] CONSTANT VALUE |                      | pushes the value into stack          | x      |
 |      A1 | PUSH R     | [SRC] REGISTER       |                      | pushes the value into stack          | x      |

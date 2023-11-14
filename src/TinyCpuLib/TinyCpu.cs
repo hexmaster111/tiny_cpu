@@ -32,7 +32,7 @@ public class TinyCpu
             }
                 break;
             case OpCode.HALT:
-                Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.F0_HALT, true);
+                Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.HALT, true);
                 break;
             case OpCode.SETREG_R_R:
             {
@@ -149,11 +149,35 @@ public class TinyCpu
                 Reg.Data[(int)destReg] -= 1;
                 break;
             }
+            case OpCode.CMP_R_C:
+            {
+                var regA = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(1)];
+                var constValeB = ReadInstructionIntRel(2);
+                CmpInternal(regA, constValeB);
+                break;
+            }
+            case OpCode.CMP_R_R:
+            {
+                var regA = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(1)];
+                var regB = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(2)];
+                CmpInternal(regA, regB);
+                break;
+            }
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
         }
 
         Reg.Data[(int)RegisterIndex.INST_PTR] += currInst.GetInstructionByteCount();
+    }
+
+    private void CmpInternal(int a, int b)
+    {
+        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.EQ, a == b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.NEQ, a != b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.GTR, a > b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.GEQ, a >= b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.LES, a < b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.LEQ, a <= b);
     }
 
     private void PushValueStack(int val)
@@ -200,7 +224,14 @@ public class TinyCpu
         Console.WriteLine($"{nameof(CpuRegisters.GP_I32_0)}:{Reg.GP_I32_0:X4}");
         Console.WriteLine($"{nameof(CpuRegisters.GP_I32_1)}:{Reg.GP_I32_1:X4}");
         Console.WriteLine($"{nameof(CpuRegisters.GP_I32_2)}:{Reg.GP_I32_2:X4}");
-
+        Console.WriteLine($"{nameof(CpuRegisters.FLAGS_0)}: " +
+                          $"{nameof(FLAGS_0_USAGE.HALT)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT)} " +
+                          $"{nameof(FLAGS_0_USAGE.EQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ)} " +
+                          $"{nameof(FLAGS_0_USAGE.NEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ)} " +
+                          $"{nameof(FLAGS_0_USAGE.GTR)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GTR)} " +
+                          $"{nameof(FLAGS_0_USAGE.GEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GEQ)} " +
+                          $"{nameof(FLAGS_0_USAGE.LES)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LES)} " +
+                          $"{nameof(FLAGS_0_USAGE.LEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ)}");
         var currInst = (OpCode)ReadInstructionByteRel(0);
         Console.WriteLine($"Current Instruction :{currInst}");
     }
@@ -223,6 +254,10 @@ public enum OpCode : byte
     DIV_R_R = 0x0A,
     INC = 0x0B,
     DEC = 0x0C,
+    CMP_R_C = 0x0D,
+    CMP_R_R = 0x0E,
+
+    //0F
     PUSH_C = 0xA0,
     PUSH_R = 0xA1,
     POP_R = 0xA2,
@@ -256,6 +291,10 @@ public static class Ext
         OpCode.PUSH_C => 1 + 4, //Opcode + int
         OpCode.PUSH_R => 1 + 1, //Opcode + byte
         OpCode.POP_R => 1 + 1, //Opcode + byte
+        OpCode.INC => 1 + 1, //Opcode + byte
+        OpCode.DEC => 1 + 1, //Opcode + byte
+        OpCode.CMP_R_C => 1 + 1 + 4, //Opcode + byte + int
+        OpCode.CMP_R_R => 1 + 1 + 1, //Opcode + byte + byte
         _ => throw new Exception($"Unknown OPCODE: {c}"),
     };
 
@@ -277,10 +316,16 @@ public static class Ext
 
 public enum FLAGS_0_USAGE
 {
-    F0_HALT = 0,
+    HALT = 0,
+    EQ = 1,
+    NEQ = 2,
+    GTR = 3,
+    GEQ = 4,
+    LES = 5,
+    LEQ = 6
 }
 
-public enum RegisterIndex : byte
+public enum RegisterIndex
 {
     INST_PTR = 0,
     FLAGS_0 = 1,
@@ -302,6 +347,7 @@ public struct CpuRegisters
 
     public readonly int INST_PTR => Data[(int)RegisterIndex.INST_PTR];
     public readonly int FLAGS_0 => Data[(int)RegisterIndex.FLAGS_0];
+
     public readonly int RESERVED_0 => Data[(int)RegisterIndex.RESERVED_0];
     public readonly int RESERVED_1 => Data[(int)RegisterIndex.RESERVED_1];
     public readonly int GP_I32_0 => Data[(int)RegisterIndex.GP_I32_0];

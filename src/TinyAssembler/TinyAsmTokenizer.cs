@@ -58,19 +58,8 @@ public class TinyAsmTokenizer
                     TokenType.NOOP => ReadNoopToken(nextParts),
                     TokenType.HALT => ReadHaltToken(nextParts),
                     TokenType.RET => ReadRetToken(nextParts),
-                    TokenType.SETREG => ReadToken(nextParts, cmd),
-                    TokenType.ADD => ReadToken(nextParts, cmd),
-                    TokenType.SUB => ReadToken(nextParts, cmd),
-                    TokenType.DIV => ReadToken(nextParts, cmd),
-                    TokenType.MUL => ReadToken(nextParts, cmd),
-                    TokenType.LBL => ReadToken(nextParts, cmd),
-                    TokenType.CALL => ReadToken(nextParts, cmd),
-                    TokenType.PUSH => ReadToken(nextParts, cmd),
-                    TokenType.POP => ReadToken(nextParts, cmd),
-                    TokenType.INC => ReadToken(nextParts, cmd),
-                    TokenType.DEC => ReadToken(nextParts, cmd),
                     TokenType.NONE => throw new Exception("Token Parse got a NONE, this is invalid"),
-                    _ => throw new ArgumentOutOfRangeException()
+                    _ => ReadToken(nextParts, cmd)
                 };
 
                 Token ReadRetToken(string[] strings) => new Token(TokenType.RET);
@@ -182,9 +171,27 @@ public class TinyAsmTokenizer
             }
         }
 
-        // @formatter:keep_existing_enum_arrangement true
-        public enum TokenType { NONE, NOOP, SETREG, ADD, SUB, DIV, MUL, LBL, CALL, HALT, RET, PUSH, POP, INC, DEC }
+        public enum TokenType
+        {
+            NONE,
+            NOOP,
+            SETREG,
+            ADD,
+            SUB,
+            DIV,
+            MUL,
+            LBL,
+            CALL,
+            HALT,
+            RET,
+            PUSH,
+            POP,
+            INC,
+            DEC,
+            CMP
+        }
 
+        // @formatter:keep_existing_enum_arrangement true
         public enum ArgumentType { CONST, REGISTER, STR, NONE }
         // @formatter:keep_existing_enum_arrangement restore
     };

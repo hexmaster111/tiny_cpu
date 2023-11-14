@@ -20,6 +20,7 @@ public static class Ext
         TokenType.POP => 1,
         TokenType.INC => 1,
         TokenType.DEC => 1,
+        TokenType.CMP => 2,
         TokenType.NONE => throw new InvalidOperationException(),
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };
