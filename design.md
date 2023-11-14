@@ -36,10 +36,10 @@ FLAGS_0 USAGE TABLE
 |      08 | SUB_R_R    | [DST] REGISTER 1     | [SRC] REGISTER 0     | SUBS R0 FROM R1 AND STORE IN R1      | x      |
 |      09 | DIV_R_C    | [DST] REGISTER       | [SRC] CONSTANT VALUE | DIVS CONST BY VALUE REG STO IN REG   | x      |
 |      0A | DIV_R_R    | [DST] REGISTER 1     | [SRC] REGISTER 0     | DIVS R0 BY R1 AND STORE IN R1        | x      |
-|      0B | INC        | [DST] REGISTER       |                      | Inc register by 1                    |        |
-|      0C | DEC        | [DST] REGISTER       |                      | Dec register by 1                    |        |
-|      0D | CMP_R_C    | [DST] REGISTER A     | [SRC] CONST    B     | A>B     A<B    A==B                  |        |
-|      0E | CMP_R_R    | [DST] REGISTER A     | [SRC] REGISTER B     | A>B     A<B    A==B                  |        |
+|      0B | INC        | [DST] REGISTER       |                      | Inc register by 1                    | x      |
+|      0C | DEC        | [DST] REGISTER       |                      | Dec register by 1                    | x      |
+|      0D | CMP_R_C    | [DST] REGISTER A     | [SRC] CONST    B     | A>B     A<B    A==B                  | x      |
+|      0E | CMP_R_R    | [DST] REGISTER A     | [SRC] REGISTER B     | A>B     A<B    A==B                  | x      |
 |      0F |            |                      |                      | RESERVED                             |        |
 |      A0 | PUSH C     | [SRC] CONSTANT VALUE |                      | pushes the value into stack          | x      |
 |      A1 | PUSH R     | [SRC] REGISTER       |                      | pushes the value into stack          | x      |
@@ -51,7 +51,7 @@ FLAGS_0 USAGE TABLE
 |         |            |                      |                      | error checking like end branch       |        |
 |         |            |                      |                      | othewise noop                        |        |
 |         |            |                      |                      |                                      |        |
-|      FF | HALT       |                      |                      |                                      |        |
+|      FF | HALT       |                      |                      |                                      | x      |
 
 ```asm
 
