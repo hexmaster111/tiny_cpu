@@ -6,18 +6,23 @@ using OpCode = TinyCpuLib.OpCode;
 var programSectionFileLines = new string[]
 {
     "CALL CALL_DEMO",
+    "LBL MORE_MATH",
     "ADD GP_I32_0 0x04",
     "SUB GP_I32_0 0x01",
     "DIV GP_I32_0 0x01",
     "MUL GP_I32_0 0x04",
     "INC GP_I32_1",
     "CMP GP_I32_1 0x5",
-    "HALT",
+    "JMP_EQ END",
+    "JMP MORE_MATH",
+    "NOOP","NOOP",
     "LBL CALL_DEMO",
     "SETREG GP_I32_0 0xFFFFFFFF",
     "PUSH 0xFF",
     "PUSH GP_I32_0",
     "RET",
+    "LBL END",
+    "HALT"
 };
 
 

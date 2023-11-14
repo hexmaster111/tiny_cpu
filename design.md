@@ -50,7 +50,20 @@ FLAGS_0 USAGE TABLE
 |      A6 | CALL_D     |                      |                      | call must land at the call dest for  | x      |
 |         |            |                      |                      | error checking like end branch       |        |
 |         |            |                      |                      | othewise noop                        |        |
-|         |            |                      |                      |                                      |        |
+|      A7 | JMP_C_EQ   | [SRC] CONSTANT VALUE |                      | JUMPS TO SRC WHEN COND               |        |
+|      A8 | JMP_C_NEQ  | [SRC] CONSTANT VALUE |                      | JUMPS TO SRC WHEN COND               |        |
+|      A9 | JMP_C_GTR  | [SRC] CONSTANT VALUE |                      | JUMPS TO SRC WHEN COND               |        |
+|      AA | JMP_C_GEQ  | [SRC] CONSTANT VALUE |                      | JUMPS TO SRC WHEN COND               |        |
+|      AB | JMP_C_LES  | [SRC] CONSTANT VALUE |                      | JUMPS TO SRC WHEN COND               |        |
+|      AC | JMP_C_LEQ  | [SRC] CONSTANT VALUE |                      | JUMPS TO SRC WHEN COND               |        |
+|      AD | JMP_R_EQ   | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               |        |
+|      AE | JMP_R_NEQ  | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               |        |
+|      AF | JMP_R_GTR  | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               |        |
+|      B0 | JMP_R_GEQ  | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               |        |
+|      B1 | JMP_R_LES  | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               |        |
+|      B2 | JMP_R_LEQ  | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               |        |
+|      B3 | JMP_R      | [SRC] REGISTER       |                      |                                      |        |
+|      B3 | JMP_C      | [SRC] CONSTANT VALUE |                      |                                      |        |
 |      FF | HALT       |                      |                      |                                      | x      |
 
 ```asm

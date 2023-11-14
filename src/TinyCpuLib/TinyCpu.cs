@@ -163,11 +163,63 @@ public class TinyCpu
                 CmpInternal(regA, regB);
                 break;
             }
+            case OpCode.JMP_C_EQ:
+            case OpCode.JMP_C_NEQ:
+            case OpCode.JMP_C_GTR:
+            case OpCode.JMP_C_GEQ:
+            case OpCode.JMP_C_LES:
+            case OpCode.JMP_C_LEQ:
+                if (JmpInternal(currInst, ReadInstructionIntRel(1)))
+                    return; //Modifes Inst Ptr 
+                break;
+            case OpCode.JMP_R_EQ:
+            case OpCode.JMP_R_NEQ:
+            case OpCode.JMP_R_GTR:
+            case OpCode.JMP_R_GEQ:
+            case OpCode.JMP_R_LES:
+            case OpCode.JMP_R_LEQ:
+                if (JmpRegInternal(currInst, (RegisterIndex)ReadInstructionByteRel(1)))
+                    return; //Modifes Inst Ptr 
+                break;
+            case OpCode.JMP_R:
+                Reg.Data[(int)RegisterIndex.INST_PTR] =
+                    Reg.Data[(int)(RegisterIndex)ReadInstructionByteAbs(1)];
+                return;
+            case OpCode.JMP_C:
+                Reg.Data[(int)RegisterIndex.INST_PTR] = ReadInstructionIntAbs(1);
+                return;
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
         }
 
         Reg.Data[(int)RegisterIndex.INST_PTR] += currInst.GetInstructionByteCount();
+    }
+
+    private bool JmpRegInternal(OpCode currInst, RegisterIndex readInstructionByteRel) =>
+        JmpInternal(currInst, Reg.Data[(int)readInstructionByteRel]);
+
+
+    private bool JmpInternal(OpCode currinst, int jmpAddress)
+    {
+        var jmp = currinst switch
+        {
+            OpCode.JMP_C_EQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ),
+            OpCode.JMP_R_EQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ),
+            OpCode.JMP_C_GTR => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GTR),
+            OpCode.JMP_R_GTR => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GTR),
+            OpCode.JMP_C_LEQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ),
+            OpCode.JMP_R_LEQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ),
+            OpCode.JMP_R_NEQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ),
+            OpCode.JMP_C_NEQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ),
+            OpCode.JMP_C_GEQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GEQ),
+            OpCode.JMP_R_GEQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GEQ),
+            OpCode.JMP_R_LES => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LES),
+            OpCode.JMP_C_LES => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LES),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (jmp) Reg.Data[(int)RegisterIndex.INST_PTR] = jmpAddress;
+        return jmp;
     }
 
     private void CmpInternal(int a, int b)
@@ -265,6 +317,23 @@ public enum OpCode : byte
     CALL_R = 0xA4,
     RET = 0xA5,
     CALL_D = 0xA6,
+
+    JMP_C_EQ = 0xA7,
+    JMP_C_NEQ = 0xA8,
+    JMP_C_GTR = 0xA9,
+    JMP_C_GEQ = 0xAA,
+    JMP_C_LES = 0xAB,
+    JMP_C_LEQ = 0xAC,
+    JMP_R_EQ = 0xAD,
+    JMP_R_NEQ = 0xAE,
+    JMP_R_GTR = 0xAF,
+    JMP_R_GEQ = 0xB0,
+    JMP_R_LES = 0xB1,
+    JMP_R_LEQ = 0xB2,
+    JMP_R = 0xB3,
+    JMP_C = 0xB4,
+
+
     HALT = 0xFF,
 }
 
@@ -295,6 +364,18 @@ public static class Ext
         OpCode.DEC => 1 + 1, //Opcode + byte
         OpCode.CMP_R_C => 1 + 1 + 4, //Opcode + byte + int
         OpCode.CMP_R_R => 1 + 1 + 1, //Opcode + byte + byte
+        OpCode.JMP_C_EQ => 1 + 4, //Opcode + Int
+        OpCode.JMP_C_NEQ => 1 + 4, //Opcode + Int
+        OpCode.JMP_C_GTR => 1 + 4, //Opcode + Int
+        OpCode.JMP_C_GEQ => 1 + 4, //Opcode + Int
+        OpCode.JMP_C_LES => 1 + 4, //Opcode + Int
+        OpCode.JMP_C_LEQ => 1 + 4, //Opcode + Int
+        OpCode.JMP_R_EQ => 1 + 1, //Opcode + byte
+        OpCode.JMP_R_NEQ => 1 + 1, //Opcode + byte
+        OpCode.JMP_R_GTR => 1 + 1, //Opcode + byte
+        OpCode.JMP_R_GEQ => 1 + 1, //Opcode + byte
+        OpCode.JMP_R_LES => 1 + 1, //Opcode + byte
+        OpCode.JMP_R_LEQ => 1 + 1, //Opcode + byte
         _ => throw new Exception($"Unknown OPCODE: {c}"),
     };
 

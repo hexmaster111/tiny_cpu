@@ -22,6 +22,13 @@ public static class Ext
         TokenType.DEC => 1,
         TokenType.CMP => 2,
         TokenType.NONE => throw new InvalidOperationException(),
+        TokenType.JMP_EQ => 1,
+        TokenType.JMP_NEQ => 1,
+        TokenType.JMP_GTR => 1,
+        TokenType.JMP_GEQ => 1,
+        TokenType.JMP_LES => 1,
+        TokenType.JMP_LEQ => 1,
+        TokenType.JMP => 1,
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };
 }

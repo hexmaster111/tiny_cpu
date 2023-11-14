@@ -188,7 +188,14 @@ public class TinyAsmTokenizer
             POP,
             INC,
             DEC,
-            CMP
+            CMP,
+            JMP_EQ,
+            JMP_NEQ,
+            JMP_GTR,
+            JMP_GEQ,
+            JMP_LES,
+            JMP_LEQ,
+            JMP
         }
 
         // @formatter:keep_existing_enum_arrangement true

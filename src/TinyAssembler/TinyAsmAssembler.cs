@@ -39,6 +39,28 @@ public class TinyAsmAssembler
         {
             switch (t.Token.Type)
             {
+                case TinyAsmTokenizer.Token.TokenType.JMP_EQ:
+                    FixJmp(t, OpCode.JMP_C_EQ, OpCode.JMP_R_EQ);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.JMP_NEQ:
+                    FixJmp(t, OpCode.JMP_C_NEQ, OpCode.JMP_R_NEQ);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.JMP_GTR:
+                    FixJmp(t, OpCode.JMP_C_GTR, OpCode.JMP_R_GTR);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.JMP_GEQ:
+                    FixJmp(t, OpCode.JMP_C_GEQ, OpCode.JMP_R_GEQ);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.JMP_LES:
+                    FixJmp(t, OpCode.JMP_C_LES, OpCode.JMP_R_LES);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.JMP_LEQ:
+                    FixJmp(t, OpCode.JMP_C_LEQ, OpCode.JMP_R_LEQ);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.JMP:
+                    FixJmp(t, OpCode.JMP_C, OpCode.JMP_R);
+                    break;
+
                 case TinyAsmTokenizer.Token.TokenType.ADD:
                     FixMathInst(t, OpCode.ADD_R_C, OpCode.ADD_R_R);
                     break;
@@ -73,7 +95,7 @@ public class TinyAsmAssembler
                     Fix_RR_RC(t, OpCode.CMP_R_R, OpCode.CMP_R_C);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.CALL:
-                    FixCall(t);
+                    FixCall(t, OpCode.CALL_C, OpCode.CALL_R); //CALL R?!
                     break;
                 case TinyAsmTokenizer.Token.TokenType.HALT:
                 case TinyAsmTokenizer.Token.TokenType.LBL:
@@ -86,6 +108,17 @@ public class TinyAsmAssembler
                     throw new ArgumentOutOfRangeException();
             }
         }
+    }
+
+
+    private void FixJmp(AsmToken token, OpCode jmpCOp, OpCode jmpROp)
+    {
+        var token0Type = token.Token.ArgumentZeroType;
+        var token1Type = token.Token.ArgumentOneType;
+        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.NONE)
+            throw new Exception("Jmp* only takes 1 arg");
+
+        FixCall(token, jmpCOp, jmpROp);
     }
 
     private void FixPushInst(AsmToken token)
@@ -187,12 +220,12 @@ public class TinyAsmAssembler
         token.Freeze();
     }
 
-    private void FixCall(AsmToken asmToken)
+    private void FixCall(AsmToken asmToken, OpCode constOpCode, OpCode registerOpCode)
     {
         if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.CONST)
         {
             var data = asmToken.GetData();
-            data[0] = (byte)OpCode.CALL_C;
+            data[0] = (byte)constOpCode;
             var dataBytes = BitConverter.GetBytes(GetIntConst(asmToken.Token.ArgumentZeroData));
             data[1] = dataBytes[0];
             data[2] = dataBytes[1];
@@ -202,17 +235,18 @@ public class TinyAsmAssembler
         else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.REGISTER)
         {
             var data = asmToken.GetData();
-            data[0] = (byte)OpCode.CALL_R;
+            data[0] = (byte)registerOpCode;
             var regIndex = Enum.Parse<RegisterIndex>(asmToken.Token.ArgumentZeroData);
             data[1] = (byte)regIndex;
         }
         else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.STR)
         {
             var targetInst = AsmTokens.Where(x => x.Token is
-            {
-                Type: TinyAsmTokenizer.Token.TokenType.LBL,
-                ArgumentZeroType: TinyAsmTokenizer.Token.ArgumentType.STR
-            }).ToImmutableArray();
+                {
+                    Type: TinyAsmTokenizer.Token.TokenType.LBL,
+                    ArgumentZeroType: TinyAsmTokenizer.Token.ArgumentType.STR
+                }).Where(x => x.Token.ArgumentZeroData == asmToken.Token.ArgumentZeroData)
+                .ToImmutableArray();
 
             if (!targetInst.Any())
             {
@@ -228,7 +262,7 @@ public class TinyAsmAssembler
             var lbl = targetInst.First();
             var addressDataBytes = GetIntConst(GetInstAddress(lbl));
             var data = asmToken.GetData();
-            data[0] = (byte)OpCode.CALL_C;
+            data[0] = (byte)constOpCode;
             data[1] = addressDataBytes[0];
             data[2] = addressDataBytes[1];
             data[3] = addressDataBytes[2];
@@ -353,17 +387,15 @@ public class AsmToken : IFreezable
             TinyAsmTokenizer.Token.ArgumentType.REGISTER => 1,
             TinyAsmTokenizer.Token.ArgumentType.STR => parentToken.Type switch
             {
-                TinyAsmTokenizer.Token.TokenType.NOOP => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.SETREG => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.ADD => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.SUB => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.DIV => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.MUL => throw new InvalidParameterException(),
                 TinyAsmTokenizer.Token.TokenType.LBL => 0, //label just turns into a CALLDST and thats just the opcode
                 TinyAsmTokenizer.Token.TokenType.CALL => 4, //INT address
-                TinyAsmTokenizer.Token.TokenType.HALT => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.RET => throw new InvalidParameterException(),
-                TinyAsmTokenizer.Token.TokenType.NONE => throw new ArgumentOutOfRangeException(),
+                TinyAsmTokenizer.Token.TokenType.JMP_EQ => 4, //INT Address
+                TinyAsmTokenizer.Token.TokenType.JMP_NEQ => 4, //INT Address
+                TinyAsmTokenizer.Token.TokenType.JMP_GTR => 4, //INT Address
+                TinyAsmTokenizer.Token.TokenType.JMP_GEQ => 4, //INT Address
+                TinyAsmTokenizer.Token.TokenType.JMP_LES => 4, //INT Address
+                TinyAsmTokenizer.Token.TokenType.JMP_LEQ => 4, //INT Address
+                TinyAsmTokenizer.Token.TokenType.JMP => 4, //INT Address
                 _ => throw new ArgumentOutOfRangeException()
             },
             TinyAsmTokenizer.Token.ArgumentType.NONE => 0,
