@@ -52,8 +52,14 @@ public class TinyAsmAssembler
                     FixMathInst(t, OpCode.MUL_R_C, OpCode.MUL_R_R);
                     break;
 
+                case TinyAsmTokenizer.Token.TokenType.INC:
+                    FixSingleRegOnly(t, OpCode.INC);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.DEC:
+                    FixSingleRegOnly(t, OpCode.DEC);
+                    break;
                 case TinyAsmTokenizer.Token.TokenType.POP:
-                    FixPopInst(t);
+                    FixSingleRegOnly(t, OpCode.POP_R);
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.PUSH:
@@ -114,24 +120,25 @@ public class TinyAsmAssembler
             data[3] = argZeroBytes[2];
             data[4] = argZeroBytes[3];
         }
-        
+
         token.Freeze();
     }
 
-    private void FixPopInst(AsmToken token)
+    private void FixSingleRegOnly(AsmToken token, OpCode code)
     {
         var token0Type = token.Token.ArgumentZeroType;
         var token1Type = token.Token.ArgumentOneType;
 
         if (token0Type != TinyAsmTokenizer.Token.ArgumentType.REGISTER)
-            throw new Exception("Arg 0 of pop must be a register");
+            throw new Exception($"Arg 0 of {token.Token.Type} must be a register");
 
-        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.NONE) throw new Exception("Unexpected arg");
+        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.NONE)
+            throw new Exception($"{token.Token.Type} Unexpected arg");
 
 
-        var destRegAddr = GetRegisterByteConst(token.Token.ArgumentOneData);
+        var destRegAddr = GetRegisterByteConst(token.Token.ArgumentZeroData);
         var data = token.GetData();
-        data[0] = (byte)OpCode.POP_R;
+        data[0] = (byte)code;
         data[1] = destRegAddr;
         token.Freeze();
     }
@@ -317,21 +324,12 @@ public class AsmToken : IFreezable
 
     public static AsmToken New(TinyAsmTokenizer.Token token) => token.Type switch
     {
-        TinyAsmTokenizer.Token.TokenType.SETREG => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.ADD => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.SUB => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.DIV => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.MUL => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.CALL => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.PUSH => new AsmToken(token, new byte[GetTokenSize(token)]),
-        TinyAsmTokenizer.Token.TokenType.POP => new AsmToken(token, new byte[GetTokenSize(token)]),
-
         TinyAsmTokenizer.Token.TokenType.NOOP => new AsmToken(token, new[] { (byte)OpCode.NOOP }),
         TinyAsmTokenizer.Token.TokenType.LBL => new AsmToken(token, new[] { (byte)OpCode.CALL_D }),
         TinyAsmTokenizer.Token.TokenType.HALT => new AsmToken(token, new[] { (byte)OpCode.HALT }),
         TinyAsmTokenizer.Token.TokenType.RET => new AsmToken(token, new[] { (byte)OpCode.RET }),
         TinyAsmTokenizer.Token.TokenType.NONE => throw new ArgumentOutOfRangeException(),
-        _ => throw new ArgumentOutOfRangeException()
+        _ => new AsmToken(token, new byte[GetTokenSize(token)]),
     };
 
     private static int GetTokenSize(TinyAsmTokenizer.Token token)

@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
 using TinyCpuLib;
 
+namespace TinyAssembler;
+
 public class TinyAsmTokenizer
 {
     public string[] InputFileLine { get; }
@@ -65,6 +67,8 @@ public class TinyAsmTokenizer
                     TokenType.CALL => ReadToken(nextParts, cmd),
                     TokenType.PUSH => ReadToken(nextParts, cmd),
                     TokenType.POP => ReadToken(nextParts, cmd),
+                    TokenType.INC => ReadToken(nextParts, cmd),
+                    TokenType.DEC => ReadToken(nextParts, cmd),
                     TokenType.NONE => throw new Exception("Token Parse got a NONE, this is invalid"),
                     _ => throw new ArgumentOutOfRangeException()
                 };
@@ -108,7 +112,7 @@ public class TinyAsmTokenizer
                     var ArgOneData = "";
 
 
-                    var expectedParts = type.ExpectedArgumetCount();
+                    var expectedParts = type.ExpectedArgumentCount();
 
                     for (int i = 0; i < expectedParts; i++)
                     {
@@ -179,7 +183,7 @@ public class TinyAsmTokenizer
         }
 
         // @formatter:keep_existing_enum_arrangement true
-        public enum TokenType { NONE, NOOP, SETREG, ADD, SUB, DIV, MUL, LBL, CALL, HALT, RET, PUSH, POP }
+        public enum TokenType { NONE, NOOP, SETREG, ADD, SUB, DIV, MUL, LBL, CALL, HALT, RET, PUSH, POP, INC, DEC }
 
         public enum ArgumentType { CONST, REGISTER, STR, NONE }
         // @formatter:keep_existing_enum_arrangement restore

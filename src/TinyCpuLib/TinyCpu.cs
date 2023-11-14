@@ -137,6 +137,18 @@ public class TinyCpu
                 Reg.Data[(int)destReg] = ValueStack.Pop();
                 break;
             }
+            case OpCode.INC:
+            {
+                var destReg = (RegisterIndex)ReadInstructionByteRel(1);
+                Reg.Data[(int)destReg] += 1;
+                break;
+            }
+            case OpCode.DEC:
+            {
+                var destReg = (RegisterIndex)ReadInstructionByteRel(1);
+                Reg.Data[(int)destReg] -= 1;
+                break;
+            }
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
         }
@@ -209,6 +221,8 @@ public enum OpCode : byte
     SUB_R_R = 0x08,
     DIV_R_C = 0x09,
     DIV_R_R = 0x0A,
+    INC = 0x0B,
+    DEC = 0x0C,
     PUSH_C = 0xA0,
     PUSH_R = 0xA1,
     POP_R = 0xA2,
@@ -216,7 +230,6 @@ public enum OpCode : byte
     CALL_R = 0xA4,
     RET = 0xA5,
     CALL_D = 0xA6,
-
     HALT = 0xFF,
 }
 

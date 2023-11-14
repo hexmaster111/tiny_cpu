@@ -10,6 +10,7 @@ var programSectionFileLines = new string[]
     "SUB GP_I32_0 0x01",
     "DIV GP_I32_0 0x01",
     "MUL GP_I32_0 0x04",
+    "INC GP_I32_0",
     "HALT           ;halt the cpu",
     "LBL CALL_DEMO",
     "SETREG GP_I32_0 0xFFFFFFFF",
