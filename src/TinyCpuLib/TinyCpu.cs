@@ -102,19 +102,19 @@ public class TinyCpu
                 break;
             case OpCode.CALL_C:
             {
-                var destAdress = ReadInstructionIntRel(1);
-                CallInternal(destAdress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
-                return; //Modifys inst ptr directly (no inc)
+                var destAddress = ReadInstructionIntRel(1);
+                CallInternal(destAddress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
+                return; //Modify inst ptr directly (no inc)
             }
             case OpCode.CALL_R:
             {
-                var destAdressReg = ReadInstructionByteRel(1);
-                var destAdress = Reg.Data[destAdressReg];
-                CallInternal(destAdress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
-                return; //Modifys inst ptr directly (no inc)
+                var destAddressReg = ReadInstructionByteRel(1);
+                var destAddress = Reg.Data[destAddressReg];
+                CallInternal(destAddress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
+                return; //Modify inst ptr directly (no inc)
             }
             case OpCode.RET:
-                RetInternal(); //Modifys inst ptr directly (no inc)
+                RetInternal(); //Modify inst ptr directly (no inc)
                 return;
             case OpCode.CALL_D:
                 break;
@@ -179,14 +179,14 @@ public class TinyCpu
             case OpCode.JMP_R_LES:
             case OpCode.JMP_R_LEQ:
                 if (JmpRegInternal(currInst, (RegisterIndex)ReadInstructionByteRel(1)))
-                    return; //Modifes Inst Ptr 
+                    return; //Modifies Inst Ptr 
                 break;
             case OpCode.JMP_R:
                 Reg.Data[(int)RegisterIndex.INST_PTR] =
                     Reg.Data[(int)(RegisterIndex)ReadInstructionByteAbs(1)];
                 return;
             case OpCode.JMP_C:
-                Reg.Data[(int)RegisterIndex.INST_PTR] = ReadInstructionIntAbs(1);
+                Reg.Data[(int)RegisterIndex.INST_PTR] = ReadInstructionIntRel(1);
                 return;
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
@@ -199,9 +199,11 @@ public class TinyCpu
         JmpInternal(currInst, Reg.Data[(int)readInstructionByteRel]);
 
 
-    private bool JmpInternal(OpCode currinst, int jmpAddress)
+    private bool JmpInternal(OpCode currInst, int jmpAddress)
     {
-        var jmp = currinst switch
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault -
+        //This only applies to the JMP instructions
+        var jmp = currInst switch
         {
             OpCode.JMP_C_EQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ),
             OpCode.JMP_R_EQ => Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ),
@@ -272,11 +274,11 @@ public class TinyCpu
     {
         Console.Clear();
         Console.WriteLine("-----------------------");
-        Console.WriteLine($"{nameof(CpuRegisters.INST_PTR)}:{Reg.INST_PTR:X4}");
-        Console.WriteLine($"{nameof(CpuRegisters.GP_I32_0)}:{Reg.GP_I32_0:X4}");
-        Console.WriteLine($"{nameof(CpuRegisters.GP_I32_1)}:{Reg.GP_I32_1:X4}");
-        Console.WriteLine($"{nameof(CpuRegisters.GP_I32_2)}:{Reg.GP_I32_2:X4}");
-        Console.WriteLine($"{nameof(CpuRegisters.FLAGS_0)}: " +
+        Console.WriteLine($"{nameof(CpuRegisters.INST_PTR)}:{Reg.INST_PTR:X4} ");
+        Console.WriteLine($"{nameof(CpuRegisters.GP_I32_0)}:{Reg.GP_I32_0:X4} " +
+                          $"{nameof(CpuRegisters.GP_I32_1)}:{Reg.GP_I32_1:X4} " +
+                          $"{nameof(CpuRegisters.GP_I32_2)}:{Reg.GP_I32_2:X4}\n" +
+                          $"{nameof(CpuRegisters.FLAGS_0)}: " +
                           $"{nameof(FLAGS_0_USAGE.HALT)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT)} " +
                           $"{nameof(FLAGS_0_USAGE.EQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ)} " +
                           $"{nameof(FLAGS_0_USAGE.NEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ)} " +
