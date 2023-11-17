@@ -4,9 +4,8 @@ public class TinyCpu
 {
     public const int MAX_STACK = 10;
     public CpuRegisters Reg = new();
-    public Stack<int> CallStack = new();
-    public Stack<int> ValueStack = new();
-
+    public readonly Stack<int> CallStack = new();
+    public readonly Stack<int> ValueStack = new();
     public byte[] TCpuExe = Array.Empty<byte>();
 
     private int ReadInstructionIntAbs(int index) => BitConverter.ToInt32(TCpuExe, index);
@@ -248,7 +247,7 @@ public class TinyCpu
         var retAdress = CallStack.Pop();
 
         if (retAdress > TCpuExe.Length)
-            throw new Exception("Call to invalid location (destnation off file)");
+            throw new Exception("Call to invalid location (dst off file)");
 
         Reg.Data[(int)RegisterIndex.INST_PTR] = retAdress;
     }
@@ -256,7 +255,7 @@ public class TinyCpu
     private void CallInternal(int callAdress, int nextAddress)
     {
         if (callAdress > TCpuExe.Length)
-            throw new Exception("Call to invalid location (destnation off file)");
+            throw new Exception("Call to invalid location (dst off file)");
 
         var instAtAdress = TCpuExe[callAdress];
 

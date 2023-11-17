@@ -77,7 +77,9 @@ HALT           ;halt the cpu",
 LBL CALL_DEMO
 SETREG GP_I32_0 0x69
 RET
+```
 
+```TCPU byte code
 var prog = new byte[]{
 /*00:*/ 0x01, 0x69, 0x00, 0x00, 0x00, 0x00, // [SETREG_R_C] SETREG GP_I32_0 69
 /*06:*/ 0xA3, 0x24, 0x00, 0x00, 0x00, // [CALL_C] CALL CALL_DEMO 
@@ -90,13 +92,3 @@ var prog = new byte[]{
 /*25:*/ 0xA5, // [RET] RET  
 };
 ```
-
-```ASM
-/*00*/ 0x01, 0x05, 0x01, 0x00, 0x00, 0x00, //SETREG_R_C GP_I_1 1
-/*06*/ 0xA6,                               //CALL_TARGET
-/*07*/ 0x00,                               //NOOP
-/*08*/ 0x03, 0x05, 0x02, 0x00, 0x00, 0x00, //ADD_R_C GP_I_1 2
-/*0E*/ 0xA3, 0x06, 0x00, 0x00, 0x00,       //CALL 0x06
-/*13*/ 0xA5                                //HALT
-```
-
