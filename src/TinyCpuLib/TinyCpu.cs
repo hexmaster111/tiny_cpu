@@ -2,17 +2,24 @@ namespace TinyCpuLib;
 
 public class TinyCpu
 {
-    public const int MAX_STACK = 10;
-    public CpuRegisters Reg = new();
+    public byte[] TCpuExe = Array.Empty<byte>();
+    public IMemory Memory = new VirtualMemory();
+
+
+    private const int MAX_STACK = 10;
+
+    public readonly CpuRegisters Reg = new();
     public readonly Stack<int> CallStack = new();
     public readonly Stack<int> ValueStack = new();
-    public byte[] TCpuExe = Array.Empty<byte>();
+    public UInt128 Ticks { get; private set; } = 0;
 
     private int ReadInstructionIntAbs(int index) => BitConverter.ToInt32(TCpuExe, index);
     private byte ReadInstructionByteAbs(int index) => TCpuExe[index];
     private byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
     private int ReadInstructionIntRel(int ipOffset) => ReadInstructionIntAbs(Reg.INST_PTR + ipOffset);
 
+    private RegisterIndex ReadInstructionRegisterIndexByteRel(int ipOffset) =>
+        (RegisterIndex)ReadInstructionByteRel(ipOffset);
 
     public void Step()
     {
@@ -125,9 +132,8 @@ public class TinyCpu
             }
             case OpCode.PUSH_R:
             {
-                var valSrc = (RegisterIndex)ReadInstructionByteRel(1);
-                var val = Reg.Data[(int)valSrc];
-                PushValueStack(val);
+                var valSrc = ReadInstructionRegisterIndexByteRel(1);
+                PushValueStack(Reg[valSrc]);
                 break;
             }
             case OpCode.POP_R:
@@ -187,11 +193,42 @@ public class TinyCpu
             case OpCode.JMP_C:
                 Reg.Data[(int)RegisterIndex.INST_PTR] = ReadInstructionIntRel(1);
                 return;
+
+            case OpCode.MEM_READ_R_C:
+            {
+                var destReg = ReadInstructionRegisterIndexByteRel(1);
+                var memAddress = ReadInstructionIntRel(2);
+                Reg[destReg] = Memory.Read(memAddress);
+            }
+                break;
+            case OpCode.MEM_READ_R_R:
+            {
+                var destReg = ReadInstructionRegisterIndexByteRel(1);
+                var srcReg = ReadInstructionRegisterIndexByteRel(2);
+                Reg[destReg] = Memory.Read(Reg[srcReg]);
+            }
+                break;
+            case OpCode.MEM_WRITE_R_C:
+            {
+                var valReg = ReadInstructionRegisterIndexByteRel(1);
+                var writeAddress = ReadInstructionIntRel(2);
+                Memory.Write(writeAddress, Reg[valReg]);
+            }
+                break;
+            case OpCode.MEM_WRITE_R_R:
+            {
+                var valReg = ReadInstructionRegisterIndexByteRel(1);
+                var writeRegAddr = ReadInstructionRegisterIndexByteRel(2);
+                Memory.Write(Reg[writeRegAddr], Reg[valReg]);
+            }
+                break;
+
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
         }
 
         Reg.Data[(int)RegisterIndex.INST_PTR] += currInst.GetInstructionByteCount();
+        Ticks++;
     }
 
     private bool JmpRegInternal(OpCode currInst, RegisterIndex readInstructionByteRel) =>
@@ -272,7 +309,7 @@ public class TinyCpu
     public void DumpState()
     {
         Console.Clear();
-        Console.WriteLine("-----------------------");
+        Console.WriteLine($"---TICK {Ticks:00000000}-----");
         Console.WriteLine($"{nameof(CpuRegisters.INST_PTR)}:{Reg.INST_PTR:X4} ");
         Console.WriteLine($"{nameof(CpuRegisters.GP_I32_0)}:{Reg.GP_I32_0:X4} " +
                           $"{nameof(CpuRegisters.GP_I32_1)}:{Reg.GP_I32_1:X4} " +
@@ -287,6 +324,7 @@ public class TinyCpu
                           $"{nameof(FLAGS_0_USAGE.LEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ)}");
         var currInst = (OpCode)ReadInstructionByteRel(0);
         Console.WriteLine($"Current Instruction :{currInst}");
+        Console.WriteLine(Memory.Debugger_ReadAllMemoryAddresses().MemoryDump());
     }
 
     public void LoadProgram(byte[] bytes) => TCpuExe = bytes;
@@ -334,12 +372,30 @@ public enum OpCode : byte
     JMP_R = 0xB3,
     JMP_C = 0xB4,
 
+    MEM_READ_R_C = 0xB5,
+    MEM_READ_R_R = 0xB6,
+    MEM_WRITE_R_C = 0xB7,
+    MEM_WRITE_R_R = 0xB8,
 
     HALT = 0xFF,
 }
 
 public static class Ext
 {
+    public static string MemoryDump(this int[] memory)
+    {
+        const int ADDR_PER_LINE = 8;
+        var addr = 0;
+        var o = "";
+        foreach (var memVal in memory)
+        {
+            o += $"{addr++:X2}:{memVal:0000} ";
+            if (addr % ADDR_PER_LINE == 0) o += Environment.NewLine;
+        }
+
+        return o;
+    }
+
     public static int GetInstructionByteCount(this OpCode c) => c switch
     {
         OpCode.NOOP => 1, //Opcode
@@ -377,6 +433,12 @@ public static class Ext
         OpCode.JMP_R_GEQ => 1 + 1, //Opcode + byte
         OpCode.JMP_R_LES => 1 + 1, //Opcode + byte
         OpCode.JMP_R_LEQ => 1 + 1, //Opcode + byte
+        OpCode.JMP_R => 1, // Opcode
+        OpCode.JMP_C => 1, //opcode
+        OpCode.MEM_READ_R_C => 1 + 1 + 4, //opcode byte int
+        OpCode.MEM_READ_R_R => 1 + 1 + 1, //opcode byte byte
+        OpCode.MEM_WRITE_R_C => 1 + 1 + 4, //opcode byte int
+        OpCode.MEM_WRITE_R_R => 1 + 1 + 1, //opcode byte byte
         _ => throw new Exception($"Unknown OPCODE: {c}"),
     };
 
@@ -416,23 +478,69 @@ public enum RegisterIndex
     GP_I32_0 = 4,
     GP_I32_1 = 5,
     GP_I32_2 = 6,
+    __REGISTER__COUNT__,
 }
 
-public struct CpuRegisters
+public interface IMemory
 {
-    public CpuRegisters()
+    public int Read(int address);
+    public void Write(int address, int value);
+    public int this[int address] { get; set; }
+    public int[] Debugger_ReadAllMemoryAddresses();
+}
+
+public readonly struct VirtualMemory : IMemory
+{
+    public readonly int[] GeneralUse;
+
+    public VirtualMemory()
     {
-        Data = new int[byte.MaxValue];
+        GeneralUse = new int[16];
     }
 
+    public int Read(int address) => GeneralUse[address];
+    public void Write(int address, int value) => GeneralUse[address] = value;
+
+    public int this[int address]
+    {
+        get => Read(address);
+        set => Write(address, value);
+    }
+
+    public int[] Debugger_ReadAllMemoryAddresses() => GeneralUse;
+}
+
+public readonly struct CpuRegisters
+{
+    public CpuRegisters() => Data = new int[(int)RegisterIndex.__REGISTER__COUNT__];
     public readonly int[] Data;
+    public int INST_PTR => Data[(int)RegisterIndex.INST_PTR];
+    public int FLAGS_0 => Data[(int)RegisterIndex.FLAGS_0];
 
-    public readonly int INST_PTR => Data[(int)RegisterIndex.INST_PTR];
-    public readonly int FLAGS_0 => Data[(int)RegisterIndex.FLAGS_0];
+    public int RESERVED_0 => Data[(int)RegisterIndex.RESERVED_0];
+    public int RESERVED_1 => Data[(int)RegisterIndex.RESERVED_1];
+    public int GP_I32_0 => Data[(int)RegisterIndex.GP_I32_0];
+    public int GP_I32_1 => Data[(int)RegisterIndex.GP_I32_1];
+    public int GP_I32_2 => Data[(int)RegisterIndex.GP_I32_2];
 
-    public readonly int RESERVED_0 => Data[(int)RegisterIndex.RESERVED_0];
-    public readonly int RESERVED_1 => Data[(int)RegisterIndex.RESERVED_1];
-    public readonly int GP_I32_0 => Data[(int)RegisterIndex.GP_I32_0];
-    public readonly int GP_I32_1 => Data[(int)RegisterIndex.GP_I32_1];
-    public readonly int GP_I32_2 => Data[(int)RegisterIndex.GP_I32_2];
+
+    public int this[byte key]
+    {
+        get => GetRegisterValue(key);
+        set => SetRegisterValue(key, value);
+    }
+
+    public int this[RegisterIndex key]
+    {
+        get => GetRegisterValue(key);
+        set => SetRegisterValue(key, value);
+    }
+
+    public void SetRegisterValue(RegisterIndex register, int value) => SetRegisterValue((byte)register, value);
+
+    public int GetRegisterValue(RegisterIndex register) => GetRegisterValue((byte)register);
+
+    private void SetRegisterValue(byte register, int value) => Data[register] = value;
+
+    private int GetRegisterValue(byte register) => Data[register];
 }
