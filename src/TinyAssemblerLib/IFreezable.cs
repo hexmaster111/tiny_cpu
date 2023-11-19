@@ -1,4 +1,4 @@
-namespace TinyAssembler;
+namespace TinyAssemblerLib;
 
 internal interface IFreezable
 {

@@ -1,6 +1,6 @@
-using static TinyAssembler.TinyAsmTokenizer.Token;
+using static TinyAssemblerLib.TinyAsmTokenizer.Token;
 
-namespace TinyAssembler;
+namespace TinyAssemblerLib;
 
 public static class Ext
 {

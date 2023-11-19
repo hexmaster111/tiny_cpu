@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using TinyCpuLib;
 
-namespace TinyAssembler;
+namespace TinyAssemblerLib;
 
 public class TinyAsmTokenizer
 {

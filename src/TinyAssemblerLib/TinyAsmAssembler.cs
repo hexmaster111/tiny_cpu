@@ -1,10 +1,8 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Reflection.Emit;
 using TinyCpuLib;
 using OpCode = TinyCpuLib.OpCode;
 
-namespace TinyAssembler;
+namespace TinyAssemblerLib;
 
 public class TinyAsmAssembler
 {

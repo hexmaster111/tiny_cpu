@@ -1,3 +1,5 @@
+# INSTRUCTIONS
+
 ## ASM SYMBOLS
 
 | INSTRUCTION | ARG 0     | ARG 1 | NOTES                             |
@@ -68,12 +70,12 @@ FLAGS_0 USAGE TABLE
 | BIT | NAME | USE                 |
 |----:|------|---------------------|
 |  00 | HALT | TRUE AFTER HALT RAN |
-|  01 | EQ   | = A==B              |
-|  02 | NEQ  | = A!=B              |
-|  03 | GTR  | = A>B               |
-|  04 | GEQ  | = A>=B              |
-|  05 | LES  | = A<B               |
-|  06 | LEQ  | = A<=B              |
+|  01 | EQ   | = A == B            |
+|  02 | NEQ  | = A != B            |
+|  03 | GTR  | = A >  B            |
+|  04 | GEQ  | = A >= B            |
+|  05 | LES  | = A <  B            |
+|  06 | LEQ  | = A <= B            |
 
 | OPPCODE | NAME          | ARG 0                | ARG 1                | NOTES                                | IMPLED |
 |--------:|---------------|----------------------|----------------------|--------------------------------------|--------|
@@ -116,12 +118,11 @@ FLAGS_0 USAGE TABLE
 |      B2 | JMP_R_LEQ     | [SRC] REGISTER       |                      | JUMPS TO SRC WHEN COND               | x      |
 |      B3 | JMP_R         | [SRC] REGISTER       |                      |                                      | x      |
 |      B4 | JMP_C         | [SRC] CONSTANT VALUE |                      |                                      | x      |
-|      B5 | MEM_READ_R_C  | [DST] REGISTER       | [SRC] CONSTANT       | READS FROM const -> register         |        |
-|      B6 | MEM_READ_R_R  | [DST] REGISTER       | [SRC] REGISTER       | READS FROM mem@regval -> register    |        |
-|      B7 | MEM_WRITE_R_C | [DST] REGISTER [val] | [SRC] CONSTANT [adr] | WRITES FROM register -> memAddress   |        |
-|      B8 | MEM_WRITE_R_R | [DST] REGISTER       | [SRC] REGISTER       | WRITES FROM register -> mem@regval   |        |
-
-| FF | HALT | | | | x |
+|      B5 | MEM_READ_R_C  | [DST] REGISTER       | [SRC] CONSTANT       | READS FROM const -> register         | x      |
+|      B6 | MEM_READ_R_R  | [DST] REGISTER       | [SRC] REGISTER       | READS FROM mem@regval -> register    | x      |
+|      B7 | MEM_WRITE_R_C | [DST] REGISTER [val] | [SRC] CONSTANT [adr] | WRITES FROM register -> memAddress   | x      |
+|      B8 | MEM_WRITE_R_R | [DST] REGISTER       | [SRC] REGISTER       | WRITES FROM register -> mem@regval   | x      |
+|      FF | HALT          |                      |                      |                                      | x      |
 
 ```asm
 
@@ -148,4 +149,38 @@ var prog = new byte[]{
 /*24:*/ 0xA6, // [CALL_D] LBL CALL_DEMO 
 /*25:*/ 0xA5, // [RET] RET  
 };
+```
+
+# FILESYSTEM
+
+| EXTENTION | FULL NAME          | USE               |
+|-----------|--------------------|-------------------|
+| .HEC      | Haileys ExeCutable | Stores executable |
+
+## EXECUTABLE FILE FORMAT (.HEC)
+
+If i just put the code at the end of the metadata, i can never grow the metadata structure
+
+|   | address       | data                    | use                                                         |
+|---|---------------|-------------------------|-------------------------------------------------------------|
+| F | 0x00          | FA DD ED D0 67 00 00 00 | MAGIC NUMBER                                  (FADDEDD0'G') |
+| F | 0x08          | XX XX XX XX             | CODE SECTION END OFFSET FROM END 'CODE_END_OFFSET' uint32   |              
+| F | 0x0B          |                         |                                                             |              
+| E | CODE_E_OFFSET |                         |                                                             |
+|   |               | TinyCpu Byte Code       | CODE FOR THE VM TO RUN                                      |
+|   | END OF FILE   |                         |                                                             |
+
+- f = file offset or offset from the file start
+- e = end offset or offset from the end of the file
+
+```
+0xFA 0xDD 0xED 0xD0 0x67 0x00 0x00 0x00
+0x0B 0x00 0x00 0x00                             //CODE_END_OFFSET 12
+//CODE SECTION START 12
+/*00:*/ 0x01, 0x05, 0x01, 0x00, 0x00, 0x00, // [SETREG_R_C] SETREG GP_I32_1 1
+/*06:*/ 0xB7, 0x05, 0x01, 0x00, 0x00, 0x00, // [MEM_WRITE_R_C] MEM_WRITE GP_I32_1 1
+/*0c:*/ 0xB8, 0x05, 0x04, // [MEM_WRITE_R_R] MEM_WRITE GP_I32_1 GP_I32_0
+/*0f:*/ 0xB5, 0x05, 0x01, 0x00, 0x00, 0x00, // [MEM_READ_R_C] MEM_READ GP_I32_1 1
+/*15:*/ 0xFF, // [HALT] HALT  
+END OF FILE
 ```
