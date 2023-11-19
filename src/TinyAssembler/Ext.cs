@@ -29,6 +29,8 @@ public static class Ext
         TokenType.JMP_LES => 1,
         TokenType.JMP_LEQ => 1,
         TokenType.JMP => 1,
+        TokenType.MEM_READ => 2,
+        TokenType.MEM_WRITE => 2,
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };
 }

@@ -12,14 +12,13 @@ public class TinyAsmTokenizer
         InputFileLine = inputFileLines;
     }
 
-    public ImmutableArray<Token> Nom() => (
-        from line in InputFileLine
-        where !string.IsNullOrWhiteSpace(line)
-        select Token.FromLine(line)
-        into tok
-        where tok != null
-        select tok
-    ).ToImmutableArray();
+    public ImmutableArray<Token> Nom() => InputFileLine
+        .Where(line => !string.IsNullOrWhiteSpace(line))
+        .Select(line => line.ToUpper())
+        .Select(Token.FromLine)
+        .Where(token => token != null)
+        .Select(token => token!)
+        .ToImmutableArray();
 
     public delegate void ErrorHandlerDelegate();
 
@@ -195,7 +194,9 @@ public class TinyAsmTokenizer
             JMP_GEQ,
             JMP_LES,
             JMP_LEQ,
-            JMP
+            JMP,
+            MEM_READ,
+            MEM_WRITE
         }
 
         // @formatter:keep_existing_enum_arrangement true

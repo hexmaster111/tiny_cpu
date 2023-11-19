@@ -3,20 +3,30 @@
 using TinyAssembler;
 using OpCode = TinyCpuLib.OpCode;
 
+// var programSectionFileLines = new string[]
+// {
+//     "CALL CALL_DEMO",
+//     "NOOP",
+//     "LBL MORE_MATH",
+//     "INC GP_I32_1",
+//     "CMP GP_I32_1 0x5",
+//     "JMP_EQ END",
+//     "JMP MORE_MATH",
+//     "NOOP", "NOOP", "NOOP", "NOOP", "NOOP", "NOOP",
+//     "LBL CALL_DEMO",
+//     "NOOP ;APP CODE",
+//     "RET",
+//     "LBL END",
+//     "HALT"
+// };
+
+
 var programSectionFileLines = new string[]
 {
-    "CALL CALL_DEMO",
-    "NOOP",
-    "LBL MORE_MATH",
-    "INC GP_I32_1",
-    "CMP GP_I32_1 0x5",
-    "JMP_EQ END",
-    "JMP MORE_MATH",
-    "NOOP", "NOOP", "NOOP", "NOOP", "NOOP", "NOOP",
-    "LBL CALL_DEMO",
-    "NOOP ;APP CODE",
-    "RET",
-    "LBL END",
+    "setreg gp_i32_1 0x01",
+    "mem_write gp_i32_1 0x01",
+    "mem_write gp_i32_1 gp_i32_0",
+    "mem_read gp_i32_1 0x01 ; read the value from 0x01 into reg",
     "HALT"
 };
 

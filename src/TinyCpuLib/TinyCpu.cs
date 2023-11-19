@@ -32,142 +32,140 @@ public class TinyCpu
                 //Dose nothing
                 break;
             case OpCode.SETREG_R_C:
-            {
-                var register = ReadInstructionByteRel(1);
-                Reg.Data[register] = ReadInstructionIntRel(2);
-            }
+                {
+                    var register = ReadInstructionByteRel(1);
+                    Reg.Data[register] = ReadInstructionIntRel(2);
+                }
                 break;
             case OpCode.HALT:
                 Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.HALT, true);
                 break;
             case OpCode.SETREG_R_R:
-            {
-                var dest = ReadInstructionByteRel(1); // reg index
-                var src = ReadInstructionByteRel(2); //reg index
-                Reg.Data[dest] = Reg.Data[src];
-            }
+                {
+                    var dest = ReadInstructionByteRel(1); // reg index
+                    var src = ReadInstructionByteRel(2); //reg index
+                    Reg.Data[dest] = Reg.Data[src];
+                }
                 break;
             case OpCode.ADD_R_C:
-            {
-                var dest = ReadInstructionByteRel(1);
-                var constVal = ReadInstructionIntRel(2);
-                Reg.Data[dest] += constVal;
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var constVal = ReadInstructionIntRel(2);
+                    Reg.Data[dest] += constVal;
+                }
                 break;
             case OpCode.ADD_R_R:
-            {
-                var dest = ReadInstructionByteRel(1);
-                var src = ReadInstructionByteRel(2);
-                Reg.Data[dest] += Reg.Data[src];
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var src = ReadInstructionByteRel(2);
+                    Reg.Data[dest] += Reg.Data[src];
+                }
                 break;
             case OpCode.MUL_R_C:
 
-            {
-                var dest = ReadInstructionByteRel(1);
-                var constVal = ReadInstructionIntRel(2);
-                Reg.Data[dest] *= constVal;
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var constVal = ReadInstructionIntRel(2);
+                    Reg.Data[dest] *= constVal;
+                }
                 break;
             case OpCode.MUL_R_R:
-            {
-                var dest = ReadInstructionByteRel(1);
-                var src = ReadInstructionByteRel(2);
-                Reg.Data[dest] *= Reg.Data[src];
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var src = ReadInstructionByteRel(2);
+                    Reg.Data[dest] *= Reg.Data[src];
+                }
                 break;
             case OpCode.SUB_R_C:
-
-            {
-                var dest = ReadInstructionByteRel(1);
-                var constVal = ReadInstructionIntRel(2);
-                Reg.Data[dest] -= constVal;
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var constVal = ReadInstructionIntRel(2);
+                    Reg.Data[dest] -= constVal;
+                }
                 break;
             case OpCode.SUB_R_R:
-            {
-                var dest = ReadInstructionByteRel(1);
-                var src = ReadInstructionByteRel(2);
-                Reg.Data[dest] -= Reg.Data[src];
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var src = ReadInstructionByteRel(2);
+                    Reg.Data[dest] -= Reg.Data[src];
+                }
                 break;
             case OpCode.DIV_R_C:
-
-            {
-                var dest = ReadInstructionByteRel(1);
-                var constVal = ReadInstructionIntRel(2);
-                Reg.Data[dest] /= constVal;
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var constVal = ReadInstructionIntRel(2);
+                    Reg.Data[dest] /= constVal;
+                }
                 break;
             case OpCode.DIV_R_R:
-            {
-                var dest = ReadInstructionByteRel(1);
-                var src = ReadInstructionByteRel(2);
-                Reg.Data[dest] /= Reg.Data[src];
-            }
+                {
+                    var dest = ReadInstructionByteRel(1);
+                    var src = ReadInstructionByteRel(2);
+                    Reg.Data[dest] /= Reg.Data[src];
+                }
                 break;
             case OpCode.CALL_C:
-            {
-                var destAddress = ReadInstructionIntRel(1);
-                CallInternal(destAddress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
-                return; //Modify inst ptr directly (no inc)
-            }
+                {
+                    var destAddress = ReadInstructionIntRel(1);
+                    CallInternal(destAddress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
+                    return; //Modify inst ptr directly (no inc)
+                }
             case OpCode.CALL_R:
-            {
-                var destAddressReg = ReadInstructionByteRel(1);
-                var destAddress = Reg.Data[destAddressReg];
-                CallInternal(destAddress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
-                return; //Modify inst ptr directly (no inc)
-            }
+                {
+                    var destAddressReg = ReadInstructionByteRel(1);
+                    var destAddress = Reg.Data[destAddressReg];
+                    CallInternal(destAddress, Reg.Data[(int)RegisterIndex.INST_PTR] + currInst.GetInstructionByteCount());
+                    return; //Modify inst ptr directly (no inc)
+                }
             case OpCode.RET:
                 RetInternal(); //Modify inst ptr directly (no inc)
                 return;
             case OpCode.CALL_D:
                 break;
             case OpCode.PUSH_C:
-            {
-                var val = ReadInstructionIntRel(1);
-                PushValueStack(val);
-                break;
-            }
+                {
+                    var val = ReadInstructionIntRel(1);
+                    PushValueStack(val);
+                    break;
+                }
             case OpCode.PUSH_R:
-            {
-                var valSrc = ReadInstructionRegisterIndexByteRel(1);
-                PushValueStack(Reg[valSrc]);
-                break;
-            }
+                {
+                    var valSrc = ReadInstructionRegisterIndexByteRel(1);
+                    PushValueStack(Reg[valSrc]);
+                    break;
+                }
             case OpCode.POP_R:
-            {
-                var destReg = (RegisterIndex)ReadInstructionByteRel(1);
-                Reg.Data[(int)destReg] = ValueStack.Pop();
-                break;
-            }
+                {
+                    var destReg = (RegisterIndex)ReadInstructionByteRel(1);
+                    Reg.Data[(int)destReg] = ValueStack.Pop();
+                    break;
+                }
             case OpCode.INC:
-            {
-                var destReg = (RegisterIndex)ReadInstructionByteRel(1);
-                Reg.Data[(int)destReg] += 1;
-                break;
-            }
+                {
+                    var destReg = (RegisterIndex)ReadInstructionByteRel(1);
+                    Reg.Data[(int)destReg] += 1;
+                    break;
+                }
             case OpCode.DEC:
-            {
-                var destReg = (RegisterIndex)ReadInstructionByteRel(1);
-                Reg.Data[(int)destReg] -= 1;
-                break;
-            }
+                {
+                    var destReg = (RegisterIndex)ReadInstructionByteRel(1);
+                    Reg.Data[(int)destReg] -= 1;
+                    break;
+                }
             case OpCode.CMP_R_C:
-            {
-                var regA = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(1)];
-                var constValeB = ReadInstructionIntRel(2);
-                CmpInternal(regA, constValeB);
-                break;
-            }
+                {
+                    var regA = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(1)];
+                    var constValeB = ReadInstructionIntRel(2);
+                    CmpInternal(regA, constValeB);
+                    break;
+                }
             case OpCode.CMP_R_R:
-            {
-                var regA = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(1)];
-                var regB = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(2)];
-                CmpInternal(regA, regB);
-                break;
-            }
+                {
+                    var regA = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(1)];
+                    var regB = Reg.Data[(int)(RegisterIndex)ReadInstructionByteRel(2)];
+                    CmpInternal(regA, regB);
+                    break;
+                }
             case OpCode.JMP_C_EQ:
             case OpCode.JMP_C_NEQ:
             case OpCode.JMP_C_GTR:
@@ -195,32 +193,32 @@ public class TinyCpu
                 return;
 
             case OpCode.MEM_READ_R_C:
-            {
-                var destReg = ReadInstructionRegisterIndexByteRel(1);
-                var memAddress = ReadInstructionIntRel(2);
-                Reg[destReg] = Memory.Read(memAddress);
-            }
+                {
+                    var destReg = ReadInstructionRegisterIndexByteRel(1);
+                    var memAddress = ReadInstructionIntRel(2);
+                    Reg[destReg] = Memory.Read(memAddress);
+                }
                 break;
             case OpCode.MEM_READ_R_R:
-            {
-                var destReg = ReadInstructionRegisterIndexByteRel(1);
-                var srcReg = ReadInstructionRegisterIndexByteRel(2);
-                Reg[destReg] = Memory.Read(Reg[srcReg]);
-            }
+                {
+                    var destReg = ReadInstructionRegisterIndexByteRel(1);
+                    var srcReg = ReadInstructionRegisterIndexByteRel(2);
+                    Reg[destReg] = Memory.Read(Reg[srcReg]);
+                }
                 break;
             case OpCode.MEM_WRITE_R_C:
-            {
-                var valReg = ReadInstructionRegisterIndexByteRel(1);
-                var writeAddress = ReadInstructionIntRel(2);
-                Memory.Write(writeAddress, Reg[valReg]);
-            }
+                {
+                    var valReg = ReadInstructionRegisterIndexByteRel(1);
+                    var writeAddress = ReadInstructionIntRel(2);
+                    Memory.Write(writeAddress, Reg[valReg]);
+                }
                 break;
             case OpCode.MEM_WRITE_R_R:
-            {
-                var valReg = ReadInstructionRegisterIndexByteRel(1);
-                var writeRegAddr = ReadInstructionRegisterIndexByteRel(2);
-                Memory.Write(Reg[writeRegAddr], Reg[valReg]);
-            }
+                {
+                    var valReg = ReadInstructionRegisterIndexByteRel(1);
+                    var writeRegAddr = ReadInstructionRegisterIndexByteRel(2);
+                    Memory.Write(Reg[writeRegAddr], Reg[valReg]);
+                }
                 break;
 
             default:
@@ -493,10 +491,7 @@ public readonly struct VirtualMemory : IMemory
 {
     public readonly int[] GeneralUse;
 
-    public VirtualMemory()
-    {
-        GeneralUse = new int[16];
-    }
+    public VirtualMemory() => GeneralUse = new int[16];
 
     public int Read(int address) => GeneralUse[address];
     public void Write(int address, int value) => GeneralUse[address] = value;

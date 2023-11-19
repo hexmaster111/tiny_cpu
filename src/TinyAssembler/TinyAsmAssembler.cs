@@ -103,6 +103,13 @@ public class TinyAsmAssembler
                 case TinyAsmTokenizer.Token.TokenType.RET:
                     t.Freeze();
                     break;
+                case TinyAsmTokenizer.Token.TokenType.MEM_READ:
+                    Fix_RR_RC(t, OpCode.MEM_READ_R_R, OpCode.MEM_READ_R_C);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.MEM_WRITE:
+                    Fix_RR_RC(t, OpCode.MEM_WRITE_R_R, OpCode.MEM_WRITE_R_C);
+                    break;
+
                 case TinyAsmTokenizer.Token.TokenType.NONE:
                 default:
                     throw new ArgumentOutOfRangeException();
