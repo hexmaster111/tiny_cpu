@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\TinyAssemblerLib\TinyAssemblerLib.csproj" />
       <ProjectReference Include="..\TinyCpuLib\TinyCpuLib.csproj" />
     </ItemGroup>
 

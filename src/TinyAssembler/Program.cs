@@ -1,23 +1,58 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
 using TinyAssemblerLib;
 using OpCode = TinyCpuLib.OpCode;
 
-var programSectionFileLines = new string[]
+
+var assemblyPaths = args
+    .Where(File.Exists)
+    .Where(x => Path.GetExtension(x) == ".casm")
+    .ToArray();
+
+var asmInputPath = assemblyPaths.FirstOrDefault();
+if (asmInputPath == null)
 {
-    "setreg gp_i32_1 0x01",
-    "mem_write gp_i32_1 0x01",
-    "mem_write gp_i32_1 gp_i32_0",
-    "mem_read gp_i32_1 0x01 ; read the value from 0x01 into reg",
-    "HALT"
-};
+    Console.WriteLine("No casm file given");
+    return;
+}
 
-
-var tokenizer = new TinyAsmTokenizer(programSectionFileLines);
+var outputPath = args.FirstOrDefault(x => x.StartsWith("-o"));
+if (outputPath == null) outputPath = Path.GetFileNameWithoutExtension(asmInputPath) + ".hec";
+else outputPath = outputPath[("-o".Length)..];
+var tokenizer = new TinyAsmTokenizer(File.ReadAllLines(asmInputPath));
 var tokens = tokenizer.Nom();
 var asm = new TinyAsmAssembler(tokens);
-var asmBytes = asm.Assemble();
+var codeSectionBytes = asm.Assemble();
+var hecFile = HecFile.New(codeSectionBytes);
 
+var zip = codeSectionBytes.Zip(hecFile.TinyCpuCode);
+#if DEBUG
+bool fail = false;
+
+Console.WriteLine("Verifying Assembly");
+int byteNumber = 0;
+foreach (var (f, s) in zip)
+{
+    if (!fail)
+    {
+        fail = f != s;
+        if (fail) Console.WriteLine($"First mismatch @{byteNumber}");
+    }
+
+    if (f != s) Console.ForegroundColor = ConsoleColor.Red;
+    Console.Write('.');
+    if (f != s) Console.ResetColor();
+    byteNumber++;
+}
+
+if (fail)
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine("Assembly verify failed!");
+}
+
+Console.WriteLine("Assembly ok");
 
 foreach (var inst in asm.AsmTokens)
 {
@@ -31,3 +66,6 @@ foreach (var inst in asm.AsmTokens)
                       instString +
                       $"// [{(OpCode)inst.GetReadOnlyData()[0]}] {inst.Token.Type} {inst.Token.ArgumentZeroData} {inst.Token.ArgumentOneData}");
 }
+#endif
+
+File.WriteAllBytes(outputPath, hecFile.GetFileBytes());

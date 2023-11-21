@@ -1,0 +1,3 @@
+setreg gp_i32_1 0xFF     ; SET GP1 TO 255
+mem_write gp_i32_1 0x0   ; WRITE 255 -> mem 0
+HALT

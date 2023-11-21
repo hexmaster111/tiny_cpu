@@ -387,7 +387,7 @@ public static class Ext
         var o = "";
         foreach (var memVal in memory)
         {
-            o += $"{addr++:X2}:{memVal:0000} ";
+            o += $"{addr++:X2}:{memVal:X4} ";
             if (addr % ADDR_PER_LINE == 0) o += Environment.NewLine;
         }
 
