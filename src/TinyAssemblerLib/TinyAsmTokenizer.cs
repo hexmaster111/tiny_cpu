@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using TinyCpuLib;
+using TinyExt;
 
 namespace TinyAssemblerLib;
 
