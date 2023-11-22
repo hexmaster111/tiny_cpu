@@ -1,8 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
 using Spectre.Console;
-using Spectre.Console.Rendering;
-using TinyAssemblerLib;
 using TinyCpuLib;
 using TinyExt;
 using static TinyAssemblerLib.TinyAsmTokenizer;
@@ -10,14 +8,17 @@ using OpCode = TinyCpuLib.OpCode;
 
 var exe = new byte[]
 {
-    /*00:*/ 0xA6, // [CALL_D] LBL START
-    /*01:*/ 0x0B, 0x04, // [INC] INC GP_I32_0
-    /*03:*/ 0x0D, 0x04, 0x0E, 0x00, 0x00, 0x00, // [CMP_R_C] CMP GP_I32_0 E
-    /*09:*/ 0xA9, 0x13, 0x00, 0x00, 0x00, // [JMP_C_GTR] JMP_GTR DONE
-    /*0e:*/ 0xB4, 0x00, 0x00, 0x00, 0x00, // [JMP_C] JMP START
-    /*13:*/ 0xA6, // [CALL_D] LBL DONE
-    /*14:*/ 0x0B, 0x05, // [INC] INC GP_I32_1
-    /*16:*/ 0xFF, // [HALT] HALT
+    /*00:*/ 0x01, 0x04, 0xFF, 0xFF, 0xFF, 0x00, // [SETREG_R_C] SETREG GP_I32_0 FFFFFF
+    /*06:*/ 0xB7, 0x04, 0x00, 0x00, 0x00, 0x00, // [MEM_WRITE_R_C] MEM_WRITE GP_I32_0 0
+    /*0c:*/ 0xB5, 0x05, 0x00, 0x00, 0x00, 0x00, // [MEM_READ_R_C] MEM_READ GP_I32_1 0
+    /*12:*/ 0x0E, 0x04, 0x05, // [CMP_R_R] CMP GP_I32_0 GP_I32_1
+    /*15:*/ 0xA8, 0x1F, 0x00, 0x00, 0x00, // [JMP_C_NEQ] JMP_NEQ FAIL
+    /*1a:*/ 0xA7, 0x21, 0x00, 0x00, 0x00, // [JMP_C_EQ] JMP_EQ PASS
+    /*1f:*/ 0xA6, // [CALL_D] LBL FAIL
+    /*20:*/ 0xFF, // [HALT] HALT
+    /*21:*/ 0xA6, // [CALL_D] LBL PASS
+    /*22:*/ 0x0B, 0x06, // [INC] INC GP_I32_2
+    /*24:*/ 0xFF, // [HALT] HALT
 };
 
 //TODO: this should be a cpu interface, and the cpu should be running on a seprate process
@@ -45,6 +46,7 @@ while (!tinyCpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT))
         if (key.Key == ConsoleKey.Spacebar) paused = true;
     }
 }
+
 AnsiConsole.Clear();
 AnsiConsole.Write(GetInfo(tinyCpu));
 AnsiConsole.Write(new Markup("[red]CPU HALTED[/]"));
@@ -61,11 +63,27 @@ bool WaitForKey(TinyCpu cpu)
     else if (key.Key == ConsoleKey.R) cpu.CycleTimeHz = AnsiConsole.Ask("Speed (Hz)", cpu.CycleTimeHz);
     else if (key.Key == ConsoleKey.C) return false;
 
+
     return true;
 }
 
-Table GetInfo(TinyCpu cpu) => new Table().AddColumns("CPU Info", "Instruction decomp")
-    .AddRow(GetCpuInfo(cpu), GetDecomp(tinyCpu.TCpuExe, tinyCpu.Reg.INST_PTR));
+Table GetInfo(TinyCpu cpu) => new Table().AddColumns("CPU", "PROGRAM")
+    .AddRow(GetCpuInfo(cpu), GetDecomp(tinyCpu.TCpuExe, tinyCpu.Reg.INST_PTR))
+    .AddRow(new Markup("MEMORY"), new Markup("2"))
+    .AddRow(GetMemoryDebugInfo(cpu), new Markup("2"));
+
+
+Table GetMemoryDebugInfo(TinyCpu cpu)
+{
+    var tbl = new Table().AddColumns("ADDR", "VAL");
+    var mem = cpu.Memory.Debugger_ReadAllMemoryAddresses();
+    for (int i = 0; i < mem.Length; i++)
+    {
+        tbl.AddRow($"{i:X8}", $"{mem[i]}");
+    }
+
+    return tbl;
+}
 
 Table GetCpuInfo(TinyCpu cpu) => new Table().AddColumns("Registers", "FLAGS_0", "CPU INTERNALS")
     .AddRow(

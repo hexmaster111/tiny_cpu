@@ -401,7 +401,7 @@ public class AsmToken : IFreezable
                 TinyAsmTokenizer.Token.TokenType.JMP_LES => 4, //INT Address
                 TinyAsmTokenizer.Token.TokenType.JMP_LEQ => 4, //INT Address
                 TinyAsmTokenizer.Token.TokenType.JMP => 4, //INT Address
-                _ => throw new ArgumentOutOfRangeException()
+                var v => throw new ArgumentOutOfRangeException($"{parentToken}")
             },
             TinyAsmTokenizer.Token.ArgumentType.NONE => 0,
             _ => throw new ArgumentOutOfRangeException(nameof(argType), argType, null)

@@ -484,14 +484,6 @@ public enum RegisterIndex
     __REGISTER__COUNT__,
 }
 
-public interface IMemory
-{
-    public int Read(int address);
-    public void Write(int address, int value);
-    public int this[int address] { get; set; }
-    public int[] Debugger_ReadAllMemoryAddresses();
-}
-
 public readonly struct VirtualMemory : IMemory
 {
     public readonly int[] GeneralUse;
