@@ -3,12 +3,12 @@
 ; GP_I32_2
 ; GP_I32_3
 
-LBL START
-inc GP_I32_0
-cmp GP_I32_0 0xE
-jmp_gtr DONE
-jmp START
+LBL START       ; Label to goto to re inc GP_0
+inc GP_I32_0    ; INCRIMENT GP_0 + 1
+cmp GP_I32_0 0xE; COMPARE GP_0 TO 0x0E(12)
+jmp_gtr DONE    ; IF GP_0 WAS LARGER THEN 12, GOTO DONE
+jmp START       ; GOTO START
 
-LBL DONE;
-inc GP_I32_1
-HALT
+LBL DONE; 
+inc GP_I32_1   ;Just so we can see we hit this once in the debugger
+HALT           ;Stop the CPU
