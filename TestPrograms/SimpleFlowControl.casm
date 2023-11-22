@@ -1,0 +1,14 @@
+; GP_I32_0
+; GP_I32_1
+; GP_I32_2
+; GP_I32_3
+
+LBL START
+inc GP_I32_0
+cmp GP_I32_0 0xE
+jmp_gtr DONE
+jmp START
+
+LBL DONE;
+inc GP_I32_1
+HALT
