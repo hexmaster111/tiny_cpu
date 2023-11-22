@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyAssemblerLib", "TinyAss
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyRuntime", "TinyRuntime\TinyRuntime.csproj", "{D1713A0C-0513-4C83-9739-078894C92869}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyDebugger", "TinyDebugger\TinyDebugger.csproj", "{42B6158A-2940-4A6B-A1ED-0E40494A3114}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{D1713A0C-0513-4C83-9739-078894C92869}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1713A0C-0513-4C83-9739-078894C92869}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1713A0C-0513-4C83-9739-078894C92869}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42B6158A-2940-4A6B-A1ED-0E40494A3114}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42B6158A-2940-4A6B-A1ED-0E40494A3114}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42B6158A-2940-4A6B-A1ED-0E40494A3114}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42B6158A-2940-4A6B-A1ED-0E40494A3114}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
