@@ -1,53 +1,32 @@
-﻿using Spectre.Console;
+﻿namespace CuteCCompiler;
 
-var input =
-    """
-    int c;
-    int a = 42;
-    int b = 69;
+public record Word(string Data, int StartChar);
 
-    void main(int num){
-        int x = 2;
-        int y = a + b;
-    }
-    """;
-
-List<CuteToke> tokens = new();
-List<string> documentTypeNames = new() { "int", "void" };
-var next = input!;
-while (!string.IsNullOrWhiteSpace(next))
+internal class Program
 {
-    var (nxt, word) = ReadWord(next);
-    next = nxt;
-    Console.WriteLine(word);
-}
-
-return;
-
-
-(string next, string word) ReadWord(string str)
-{
-    List<char> wordBuff = new();
-    var sr = new StringReader(str);
-    var dn = false;
-    var first = true;
-    while (!dn)
+    public static void Main(string[] args)
     {
-        var peek = sr.Peek();
-        if (peek is
-            ';' or '(' or ')' or ',' or '+' or '-' or '\t' or
-            '\r' or '\n' or '/' or '*' or '}' or '{' or ' ' or -1)
-        {
-            if (first && peek is not ('\t' or ' ' or -1)) wordBuff.Add((char)sr.Read());
-            dn = true;
-            continue;
-        }
+        var input =
+            """
+            int c;
+            int a = 42;
+            int b = 69;
+            int someVar = 1+(69*2);
 
-        wordBuff.Add((char)sr.Read());
-        first = false;
+            void main(int num){
+                int x = 2;
+                int y = a + b;
+            }
+            """;
+
+        var ws = new CuteCWordSplitter();
+        ws.Parse(input);
+        var words = ws.Words;
+
+        List<string> documentTypeNames = new() { "int", "void" };
+        List<CuteToke> tokens = new();
+        return;
     }
-
-    return (sr.ReadToEnd(), new string(wordBuff.ToArray()));
 }
 
 record CuteToke(CuteTokenKind Kind, string Value);
