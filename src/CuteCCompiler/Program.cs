@@ -1,6 +1,8 @@
-﻿namespace CuteCCompiler;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
-public record Word(string Data, int StartChar);
+namespace CuteCCompiler;
 
 internal class Program
 {
@@ -11,32 +13,65 @@ internal class Program
             int c;
             int a = 42;
             int b = 69;
-            int someVar = 1+(69*2);
 
-            void main(int num){
+            fn main():void{
                 int x = 2;
                 int y = a + b;
             }
             """;
 
-        var ws = new CuteCWordSplitter();
-        ws.Parse(input);
-        var words = ws.Words;
 
-        List<string> documentTypeNames = new() { "int", "void" };
-        List<CuteToke> tokens = new();
-        return;
+        var words = CuteCWordSplitter.Wordify(input);
+        var tokens = CuteCTokenizer.Tokenize(words);
+        var rootToken = CuteCLexer.Lex(tokens);
+
+        CuteCVisualisation.DrawCompileSteps(words, tokens);
+        Debugger.Break();
     }
 }
 
-record CuteToke(CuteTokenKind Kind, string Value);
-
-enum CuteTokenKind
+public class CuteLexToken
 {
-    NONE,
-    Type, VarName, EndLine, Assignment, TypedIntValue,
-    OpenParen, CloseParen,
-    OpenBracket, CloseBracket,
-    Comma,
-    Add, Sub, Div, Mut
+    public List<CuteLexToken> Body { get; set; }
+}
+
+public static class CuteCLexer
+{
+    public static CuteLexToken Lex(List<CuteToke> tokes)
+    {
+        var ts = new TokenStream(tokes);
+        var ns = new Stack<string>();
+        ns.Push("global"); //Everything starts in the global ns
+
+        while (ts.Next(out var token))
+        {
+            
+        }
+
+        var verify = ns.Pop();
+        if (verify != "global") throw new Exception("Program did not end in global ns");
+        
+        throw new NotImplementedException();
+    }
+}
+
+public class TokenStream
+{
+    private readonly List<CuteToke> _tokens;
+    public TokenStream(List<CuteToke> tokens) => _tokens = tokens;
+    public int Pos { get; private set; }
+    public bool EndOfStream => Pos >= _tokens.Count;
+
+    public CuteToke? Peek()
+    {
+        return _tokens[Pos + 1];
+    }
+
+    public bool Next([NotNullWhen(true)] out CuteToke? cuteToke)
+    {
+        cuteToke = null;
+        if (EndOfStream) return false;
+        cuteToke = _tokens[Pos++];
+        return true;
+    }
 }

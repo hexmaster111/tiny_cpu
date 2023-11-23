@@ -47,3 +47,47 @@ void main(){
 //CALL FUNC_MAIN
 //HALT
 ```
+
+VARIABLE_DEC
+FUNCTION_DEC
+
+```
+
+┌───────┬──────────────┬────────────────
+│ Words │ Tokens       │Tree?                
+├───────┼──────────────┼────────────────
+│ int   │ Type         │ VAR_DEC     NAME:c
+│ c     │ VarName      │ │-TYPE: int
+│ ;     │ EndLine      │      
+│ int   │ Type         │ VAR_DEC     NAME:a
+│ a     │ VarName      │ │-TYPE: int  
+│ =     │ Assignment   │ │ VAR_ASSIGNMENT    
+│ 42    │ TypedValue   │   │-TYPED_VALUE            
+│ ;     │ EndLine      │                
+│ int   │ Type         │ VAR_DEC    NAME:b   
+│ b     │ VarName      │ │-TYPE: int
+│ =     │ Assignment   │ │ VAR_ASSIGNMENT            
+│ 69    │ TypedValue   │   |-TYPED_VALUE             
+│ ;     │ EndLine      │                
+│ fn    │ Function     │ FUNC_DEC NAME:main               
+│ main  │ VarName      │ │-ARGS: void  
+│ (     │ OpenParen    │ |-RET : void
+│ )     │ CloseParen   │ │ VAR_DEC  NAME:main::x        
+│ :     │ OfType       │ │ │-TYPE:int                  
+│ void  │ Type         │ │ │-VARIABLE_ASSIGNMENT       
+│ {     │ OpenBracket  │ │   |-TYPED_VALUE             
+│ int   │ Type         │ │ VAR_DEC NAME:main::y
+│ x     │ VarName      │ │ │-TYPE: int  
+│ =     │ Assignment   │ │ │-VARIABLE_ASSIGNMENT
+│ 2     │ TypedValue   │   | |-EXPR
+│ ;     │ EndLine      │     │ │ SUM
+│ int   │ Type         │       │- A
+│ y     │ VarName      │       │- B
+│ =     │ Assignment   │
+│ a     │ VarName      │
+│ +     │ Add          │
+│ b     │ VarName      │
+│ ;     │ EndLine      │
+│ }     │ CloseBracket │ 
+└───────┴──────────────┴
+```
