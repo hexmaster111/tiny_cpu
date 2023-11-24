@@ -18,7 +18,7 @@ internal class Program
             a = 42;
             b = 69;
 
-            fn main(int a, void b):void
+            fn main():void
             {
                 int x;
                 int y;
@@ -27,6 +27,7 @@ internal class Program
                 y = a + b;
             }
 
+            main();
             """;
 
 
@@ -50,6 +51,7 @@ public interface ICuteLexNode
     public CuteLexNodeKind Kind { get; }
 
     public List<ICuteLexNode> Children { get; set; }
+    public string ProvidedNameSpace { get; }
     public string NameSpace { get; }
 }
 
@@ -66,6 +68,7 @@ public class VarDef : ICuteLexNode
 
     public CuteToke VariableType { get; }
     public CuteToke VariableName { get; }
+    public string ProvidedNameSpace => $"VAR_{VariableName.Data.Str}:{VariableType.Data.Str}";
     public string NameSpace { get; }
     public List<CuteToke> Expression { get; }
     public List<CuteToke> ChildData { get; } = new();
@@ -91,9 +94,10 @@ public class FuncDef : ICuteLexNode
     public CuteToke Return { get; }
 
     public List<CuteToke> ChildData { get; }
-    public List<CuteToke> Expression { get; }
+    public List<CuteToke> Expression { get; } = new();
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.FuncDefinition;
     public List<ICuteLexNode> Children { get; set; } = new();
+    public string ProvidedNameSpace => $"FUNC_{FuncName.Data.Str}";
     public string NameSpace { get; }
 }
 
@@ -114,6 +118,7 @@ public class VarAsi : ICuteLexNode
     public List<CuteToke> ChildData { get; } = new();
     public List<CuteToke> Expression { get; }
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.VarAssignment;
+    public string ProvidedNameSpace => $"VARASI_{VarBeingAssignedTo.Data.Str}";
     public string NameSpace { get; }
     public List<ICuteLexNode> Children { get; set; } = new();
 }
@@ -122,13 +127,17 @@ public class FuncCall : ICuteLexNode
 {
     public FuncCall(TokenStream ts, string ns)
     {
-        throw new NotImplementedException();
+        NameSpace = ns;
+        var funcName = ts.TakeOne();
+        Expression = ts.ReadParenBody();
+        var endLine = ts.TakeOne();
     }
 
-    public List<CuteToke> ChildData { get; }
     public List<CuteToke> Expression { get; }
-    public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.FuncCall;
+    public CuteLexNodeKind Kind => CuteLexNodeKind.FuncCall;
     public List<ICuteLexNode> Children { get; set; } = new();
+    public List<CuteToke> ChildData { get; } = new();
+    public string ProvidedNameSpace => $"";
     public string NameSpace { get; }
 }
 
@@ -140,6 +149,7 @@ public class ProgramRoot : ICuteLexNode
     public List<CuteToke> Expression { get; } = new();
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.ProgramRoot;
     public List<ICuteLexNode> Children { get; set; } = new();
+    public string ProvidedNameSpace => ".";
     public string NameSpace { get; } = ".";
 }
 
@@ -157,13 +167,12 @@ public static class CuteCLexer
 
         while (!proceedAllBodyTokens)
         {
-            
             if (ts.EndOfStream)
             {
                 proceedAllBodyTokens = true;
                 continue;
             }
-            
+
             Console.WriteLine(current.Kind);
 
             if (IsTokenPattern(CuteTokenKind.Type, CuteTokenKind.VarName))
@@ -188,7 +197,6 @@ public static class CuteCLexer
             }
             else throw new Exception("Unknown Pattern");
 
-           
 
             continue;
 
@@ -199,7 +207,7 @@ public static class CuteCLexer
 
         foreach (var child in current.Children)
         {
-            Lex(child, new TokenStream(child.ChildData.ToArray()), ns + "::" + child.Kind); //TODO: real namespace
+            Lex(child, new TokenStream(child.ChildData.ToArray()), ns + "::" + child.ProvidedNameSpace);
         }
     }
 
