@@ -8,25 +8,18 @@ internal class Program
     {
         var input =
             """
-            int c;
-            int a;
-            int b;
+            int c = 0;
+            int a = 42;
+            int b = 69;
 
-            a = 42;
-            b = 69;
-
-            fn add ( int a, int b ) : int
-            {
-                ret(a + b);
+            fn demo ( int val ) : int {
+                return(val);
             }
-
-            fn main(  ) : void
-            {
-                int x;
-                int y;
             
-                x = add ( a, b );
-                y = a + b;
+            fn main (  ) : void
+            {
+                int x = a + b;
+                int y = a * x;
             }
 
             main();

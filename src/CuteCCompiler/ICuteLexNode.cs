@@ -16,19 +16,6 @@ public interface ICuteLexNode
     string GetOneLineInfo();
 }
 
-public class Expression
-{
-    private Expression()
-    {
-        
-    }
-    
-    public static Expression FromData(List<CuteToke> exp)
-    {
-        return new Expression();
-    }
-}
-
 public class VarDef : ICuteLexNode
 {
     public VarDef(TokenStream ts, string nameSpace)
@@ -43,7 +30,10 @@ public class VarDef : ICuteLexNode
     public CuteToke VariableType { get; }
     public CuteToke VariableName { get; }
     public string ProvidedNameSpace => $"{VariableName.Data.Str}:{VariableType.Data.Str}";
-    public string GetOneLineInfo() => $"{VariableName.Data.Str} : {VariableType.Data.Str} = (...todo expression...)";
+
+    public string GetOneLineInfo() =>
+        $"{VariableName.Data.Str} : {VariableType.Data.Str} = {((ICuteLexNode)this).Expression}";
+
     public string NameSpace { get; }
 
     public List<CuteToke> ExpressionData { get; }
@@ -75,7 +65,7 @@ public class FuncDef : ICuteLexNode
     public List<ICuteLexNode> Children { get; set; } = new();
     public string ProvidedNameSpace => $"fn_{FuncName.Data.Str}";
     public string NameSpace { get; }
-    public string GetOneLineInfo() => $"{FuncName.Data.Str} (...todo args...) => {Return.Data.Str}";
+    public string GetOneLineInfo() => $"fn {FuncName.Data.Str} (...todo args...) => {Return.Data.Str}";
 }
 
 public class VarAsi : ICuteLexNode
@@ -97,7 +87,7 @@ public class VarAsi : ICuteLexNode
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.VarAssignment;
     public string ProvidedNameSpace => $"assignment_{VarBeingAssignedTo.Data.Str}";
     public string NameSpace { get; }
-    public string GetOneLineInfo() => $"{VarBeingAssignedTo.Data.Str} = (..todo expression..)";
+    public string GetOneLineInfo() => $"{VarBeingAssignedTo.Data.Str} = {((ICuteLexNode)this).Expression}";
 
     public List<ICuteLexNode> Children { get; set; } = new();
 }
@@ -119,7 +109,7 @@ public class FuncCall : ICuteLexNode
     public List<CuteToke> ChildData { get; } = new();
     public string ProvidedNameSpace => $"";
     public string NameSpace { get; }
-    public string GetOneLineInfo() => $"(...todo args...)=>{FunctionNameBeingCalled.Data.Str}";
+    public string GetOneLineInfo() => $"{FunctionNameBeingCalled.Data.Str} (...todo args...)";
 }
 
 public class ProgramRoot : ICuteLexNode

@@ -10,11 +10,12 @@ public static class CuteCVisualisation
     {
         var grid = new Grid();
 
-        var tbl = new Table().AddColumns("Code", "Words");
+        var tbl = new Table().AddColumns("char", "Code", "Words");
         var zip = tokenWords.Zip(tokens);
         foreach (var (first, second) in zip)
         {
-            tbl.AddRow(new Markup(first.Str), new Markup(second.Kind.ToString()));
+            tbl.AddRow(new Markup(second.Data.StartChar.ToString()), new Markup(first.Str),
+                new Markup(second.Kind.ToString()));
         }
 
         var t = new Tree("");
