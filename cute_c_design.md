@@ -91,3 +91,69 @@ FUNCTION_DEC
 │ }     │ CloseBracket │ 
 └───────┴──────────────┴
 ```
+
+```
+┌───────┬──────────────┐
+│ Words │ Tokens       │
+├───────┼──────────────┤
+PROGRAM ROOT:
+    VAR DEC:
+        │ int   │ Type         │
+        │ c     │ VarName      │
+    │ ;     │ EndLine      │
+    VAR DEC:
+        │ int   │ Type         │
+        │ a     │ VarName      │
+    │ ;     │ EndLine      │
+    VAR DEC:
+        │ int   │ Type         │
+        │ b     │ VarName      │
+    │ ;     │ EndLine      │
+    VAR ASSIGNMENT:
+        │ a     │ VarName      │
+        │ =     │ Assignment   │
+        EXPRESSION:
+            │ 42    │ TypedValue   │
+    │ ;     │ EndLine      │
+    VAR ASSIGNMENT:
+        │ b     │ VarName      │
+        │ =     │ Assignment   │
+        EXPRESSION:
+            │ 69    │ TypedValue   │
+    │ ;     │ EndLine      │
+    FUNC DEC:
+        │ fn    │ Function     │
+        │ main  │ VarName      │
+        │ (     │ OpenParen    │
+        │ )     │ CloseParen   │
+        │ :     │ OfType       │
+        │ void  │ Type         │
+        BODY:
+        │ {     │ OpenBracket  │
+            VAR DEC:
+                │ int   │ Type         │
+                │ x     │ VarName      │
+            │ ;     │ EndLine      │
+            VAR DEC:
+                │ int   │ Type         │
+                │ y     │ VarName      │
+            │ ;     │ EndLine      │
+            VAR ASSIGNMENT:
+                │ x     │ VarName      │
+                │ =     │ Assignment   │
+                EXPRESSION:
+                    │ 2     │ TypedValue   │
+            │ ;     │ EndLine      │
+            VAR ASSIGNMENT:
+                │ y     │ VarName      │
+                │ =     │ Assignment   │
+                EXPRESSION:
+                    │ a     │ VarName      │
+                    │ +     │ Add          │
+                    │ b     │ VarName      │
+            │ ;     │ EndLine      │
+        │ }     │ CloseBracket │
+└───────┴──────────────┘
+
+
+```

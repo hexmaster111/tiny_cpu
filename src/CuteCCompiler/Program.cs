@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Net.NetworkInformation;
 
 namespace CuteCCompiler;
 
@@ -15,136 +16,250 @@ internal class Program
             int b;
 
             a = 42;
-            b = 69
+            b = 69;
 
-            fn main():
+            fn main(int a, void b):void
             {
                 int x;
                 int y;
             
-                x = 2
+                x = 2;
                 y = a + b;
             }
+
             """;
 
 
         var words = CuteCWordSplitter.Wordify(input);
         var tokens = CuteCTokenizer.Tokenize(words);
-        var rootToken = CuteCLexer.Lex(tokens);
+        var rootToken = new ProgramRoot(tokens);
+        CuteCLexer.Lex(rootToken);
 
         CuteCVisualisation.DrawCompileSteps(words, tokens);
         Debugger.Break();
     }
 }
 
-public class CuteLexToken
+public interface ICuteLexNode
 {
-    public CuteLexToken(CuteLexTokenKind kind, CuteToke?[]? parts, string nameSpace)
+    /// Data to be used by next call to LEX
+    public List<CuteToke> ChildData { get; }
+
+    public List<CuteToke> Expression { get; }
+
+    public CuteLexNodeKind Kind { get; }
+
+    public List<ICuteLexNode> Children { get; set; }
+    public string NameSpace { get; }
+}
+
+public class VarDef : ICuteLexNode
+{
+    public VarDef(TokenStream ts, string nameSpace)
     {
-        Kind = kind;
-        Parts = parts;
+        var expr = ts.ReadEndLineType().ToArray();
+        VariableType = expr[0];
+        VariableName = expr[1];
+        Expression = expr[2..].ToList();
         NameSpace = nameSpace;
     }
 
-
-    public string NameSpace { get; set; }
-
-    public CuteLexTokenKind Kind { get; set; }
-    public List<CuteLexToken> Body { get; set; } = new();
-    public CuteToke?[]? Parts { get; set; }
+    public CuteToke VariableType { get; }
+    public CuteToke VariableName { get; }
+    public string NameSpace { get; }
+    public List<CuteToke> Expression { get; }
+    public List<CuteToke> ChildData { get; } = new();
+    public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.VarDefinition;
+    public List<ICuteLexNode> Children { get; set; } = new();
 }
 
-public enum CuteLexTokenKind
+public class FuncDef : ICuteLexNode
 {
-    VarDef,
-    VarAssignment
+    public FuncDef(TokenStream ts, string ns)
+    {
+        NameSpace = ns;
+        var fnKeyWord = ts.TakeOne();
+        FuncName = ts.TakeOne();
+        Args = ts.ReadParenBody();
+        var ofTypeKeyWord = ts.TakeOne();
+        Return = ts.TakeOne();
+        ChildData = ts.ReadBracketBody();
+    }
+
+    public CuteToke FuncName { get; }
+    public List<CuteToke> Args { get; }
+    public CuteToke Return { get; }
+
+    public List<CuteToke> ChildData { get; }
+    public List<CuteToke> Expression { get; }
+    public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.FuncDefinition;
+    public List<ICuteLexNode> Children { get; set; } = new();
+    public string NameSpace { get; }
+}
+
+public class VarAsi : ICuteLexNode
+{
+    public VarAsi(TokenStream ts, string ns)
+    {
+        NameSpace = ns;
+        var exprTokens = ts.ReadEndLineType();
+        var exprStream = new TokenStream(exprTokens.ToArray());
+        VarBeingAssignedTo = exprStream.TakeOne();
+        var keyWord = exprStream.TakeOne();
+        if (keyWord.Kind != CuteTokenKind.Assignment) throw new Exception("Incorrect keyword!");
+        Expression = exprStream.ReadEndLineType();
+    }
+
+    public CuteToke VarBeingAssignedTo { get; }
+    public List<CuteToke> ChildData { get; } = new();
+    public List<CuteToke> Expression { get; }
+    public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.VarAssignment;
+    public string NameSpace { get; }
+    public List<ICuteLexNode> Children { get; set; } = new();
+}
+
+public class FuncCall : ICuteLexNode
+{
+    public FuncCall(TokenStream ts, string ns)
+    {
+        throw new NotImplementedException();
+    }
+
+    public List<CuteToke> ChildData { get; }
+    public List<CuteToke> Expression { get; }
+    public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.FuncCall;
+    public List<ICuteLexNode> Children { get; set; } = new();
+    public string NameSpace { get; }
+}
+
+public class ProgramRoot : ICuteLexNode
+{
+    public ProgramRoot(List<CuteToke> tokens) => ChildData = tokens;
+
+    public List<CuteToke> ChildData { get; }
+    public List<CuteToke> Expression { get; } = new();
+    public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.ProgramRoot;
+    public List<ICuteLexNode> Children { get; set; } = new();
+    public string NameSpace { get; } = ".";
 }
 
 public static class CuteCLexer
 {
-    public static CuteLexToken Lex(List<CuteToke> tokes)
+    public static void Lex(ProgramRoot rootToken)
     {
-        var ts = new TokenStream(tokes);
-        var ns = new Stack<string>();
-        var reg = new List<CuteLexToken>();
-        ns.Push("global"); //Everything starts in the global ns
+        var ts = new TokenStream(rootToken.ChildData.ToArray());
+        Lex(rootToken, ts, "global");
+    }
 
-        while (ts.Next(
-                   out var t0,
-                   out var t1,
-                   out var t2,
-                   out var t3))
+    public static void Lex(ICuteLexNode current, TokenStream ts, string ns)
+    {
+        var proceedAllBodyTokens = false;
+
+        while (!proceedAllBodyTokens)
         {
-            var isVarDec = (IsToken(CuteTokenKind.Type, t0) &&
-                            IsToken(CuteTokenKind.VarName, t1) &&
-                            IsToken(CuteTokenKind.EndLine, t2));
+            
+            if (ts.EndOfStream)
+            {
+                proceedAllBodyTokens = true;
+                continue;
+            }
+            
+            Console.WriteLine(current.Kind);
 
-            //VarName Assignment [read in] endLine
-            var isVarAssignment = (IsToken(CuteTokenKind.VarName, t0) &&
-                                   IsToken(CuteTokenKind.Assignment, t1));
+            if (IsTokenPattern(CuteTokenKind.Type, CuteTokenKind.VarName))
+            {
+                var node = new VarDef(ts, ns);
+                current.Children.Add(node);
+            }
+            else if (IsTokenPattern(CuteTokenKind.Function, CuteTokenKind.VarName, CuteTokenKind.OpenParen))
+            {
+                var node = new FuncDef(ts, ns);
+                current.Children.Add(node);
+            }
+            else if (IsTokenPattern(CuteTokenKind.VarName, CuteTokenKind.Assignment))
+            {
+                var node = new VarAsi(ts, ns);
+                current.Children.Add(node);
+            }
+            else if (IsTokenPattern(CuteTokenKind.VarName, CuteTokenKind.OpenParen))
+            {
+                var node = new FuncCall(ts, ns);
+                current.Children.Add(node);
+            }
+            else throw new Exception("Unknown Pattern");
 
-            var eat = 0;
-            if (isVarDec) eat = 2;
-            else if (isVarAssignment) eat = 1;
-            for (int i = 0; i < eat; i++) ts.Next();
+           
 
-            if (isVarDec)
-                reg.Add(new CuteLexToken(CuteLexTokenKind.VarDef, new[] { t0, t1, t2 }, GetCurrentVarNameSpace()));
-            // else if (isVarAssignment)
-            // reg.Add(new CuteLexToken(CuteLexTokenKind.VarDef, ReadVarAsnParts(), GetCurrentVarNameSpace()));
             continue;
-            bool IsToken(CuteTokenKind t, CuteToke? ct) => ct?.Kind == t;
-            string GetCurrentVarNameSpace() => ns!.Peek();
+
+            bool IsTokenPattern(params CuteTokenKind[] kinds) =>
+                !kinds.Where((t, i) => ts.Peek(i)?.Kind != t).Any();
         }
 
-        var verify = ns.Pop();
-        if (verify != "global") throw new Exception("Program did not end in global ns");
 
-        throw new NotImplementedException();
-    }
-}
-
-public class TokenStream
-{
-    private readonly List<CuteToke> _tokens;
-    public TokenStream(List<CuteToke> tokens) => _tokens = tokens;
-    public int Pos { get; private set; }
-    public bool EndOfStream => Pos >= _tokens.Count;
-
-    public CuteToke? Peek(int dist)
-    {
-        if (Pos + dist >= 0 && Pos + dist < _tokens.Count) return _tokens[Pos + dist];
-        return null;
+        foreach (var child in current.Children)
+        {
+            Lex(child, new TokenStream(child.ChildData.ToArray()), ns + "::" + child.Kind); //TODO: real namespace
+        }
     }
 
-    public bool Next
-        (out CuteToke? cuteToke, out CuteToke? peek0, out CuteToke? peek1, out CuteToke? peek2)
+
+    // ends with a end line ;
+    public static List<CuteToke> ReadEndLineType(this TokenStream ts)
     {
-        cuteToke = null;
-        peek0 = null;
-        peek1 = null;
-        peek2 = null;
+        var ret = new List<CuteToke>();
+        while (ts.Next(out var t))
+        {
+            if (t == null) throw new Exception("missing endLine");
+            ret.Add(t);
+            if (t.Kind == CuteTokenKind.EndLine) break;
+        }
 
-        if (EndOfStream) return false;
-        cuteToke = Peek(0);
-        peek0 = Peek(1);
-        peek1 = Peek(2);
-        peek2 = Peek(3);
-
-        return Next();
+        return ret;
     }
 
-    public bool Next(out CuteToke? cuteToke)
-    {
-        cuteToke = null;
-        if (EndOfStream) return false;
-        cuteToke = Peek(0);
-        return Next();
-    }
 
-    public bool Next()
+    // ( ... )
+    public static List<CuteToke> ReadParenBody(this TokenStream ts) =>
+        ReadBody(ts, CuteTokenKind.OpenParen, CuteTokenKind.CloseParen);
+
+    // { ... }
+    public static List<CuteToke> ReadBracketBody(this TokenStream ts) =>
+        ReadBody(ts, CuteTokenKind.OpenBracket, CuteTokenKind.CloseBracket);
+
+    static List<CuteToke> ReadBody(TokenStream ts, CuteTokenKind openKind, CuteTokenKind closeKind)
     {
-        Pos++;
-        return !EndOfStream;
+        var ret = new List<CuteToke>();
+
+        var g0 = ts.Next(out var op);
+        if (op == null) throw new Exception("Unexpected EOF");
+        if (op.Kind != openKind)
+            throw new Exception($"Expected {openKind}, got {op.Kind} from {op.Data.Str}");
+
+
+        var open = 1;
+        var close = 0;
+
+
+        while (open != close)
+        {
+            if (!ts.Next(out var token)) throw new Exception("Unexpected EOF");
+            Debug.Assert(token != null);
+            if (token.Kind == openKind)
+            {
+                open++;
+                continue;
+            }
+
+            if (token.Kind == closeKind)
+            {
+                close++;
+                continue;
+            }
+
+            ret.Add(token);
+        }
+
+        return ret;
     }
 }
