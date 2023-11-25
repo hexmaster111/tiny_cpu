@@ -6,11 +6,12 @@ public static class CuteCLexer
 {
     public static void Lex(ProgramRoot rootToken)
     {
+        rootToken.NameSpace = ".";
         var ts = new TokenStream(rootToken.ChildData.ToArray());
-        Lex(rootToken, ts, "global");
+        Lex(rootToken, ts);
     }
 
-    private static void Lex(ICuteLexNode current, TokenStream ts, string ns)
+    private static void Lex(ICuteLexNode current, TokenStream ts)
     {
         var proceedAllBodyTokens = false;
 
@@ -25,22 +26,22 @@ public static class CuteCLexer
 
             if (IsTokenPattern(CuteTokenKind.Type, CuteTokenKind.VarName))
             {
-                var node = new VarDef(ts, ns);
+                var node = new VarDef(ts, current.NameSpace);
                 current.Children.Add(node);
             }
             else if (IsTokenPattern(CuteTokenKind.Function, CuteTokenKind.VarName, CuteTokenKind.OpenParen))
             {
-                var node = new FuncDef(ts, ns);
+                var node = new FuncDef(ts, current.NameSpace);
                 current.Children.Add(node);
             }
             else if (IsTokenPattern(CuteTokenKind.VarName, CuteTokenKind.Assignment))
             {
-                var node = new VarAsi(ts, ns);
+                var node = new VarAsi(ts, current.NameSpace);
                 current.Children.Add(node);
             }
             else if (IsTokenPattern(CuteTokenKind.VarName, CuteTokenKind.OpenParen))
             {
-                var node = new FuncCall(ts, ns);
+                var node = new FuncCall(ts, current.NameSpace);
                 current.Children.Add(node);
             }
             else throw new Exception("Unknown Pattern");
@@ -55,10 +56,12 @@ public static class CuteCLexer
 
         foreach (var child in current.Children)
         {
-            Lex(child, new TokenStream(child.ChildData.ToArray()), ns + "::" + child.ProvidedNameSpace);
+            child.NameSpace = NameSpace.Combine(current.NameSpace, child.ProvidedNameSpace);
+            Lex(child, new TokenStream(child.ChildData.ToArray()));
         }
     }
 
+    
 
     // ends with a end line ;
     public static List<CuteToke> ReadEndLineType(this TokenStream ts)
@@ -117,5 +120,14 @@ public static class CuteCLexer
         }
 
         return ret;
+    }
+}
+
+public static class NameSpace
+{
+    public const string NS_MARK = "::";
+    public static string Combine(string a, string b)
+    {
+        return a + NS_MARK + b;
     }
 }

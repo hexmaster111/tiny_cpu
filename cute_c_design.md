@@ -155,5 +155,6 @@ PROGRAM ROOT:
         │ }     │ CloseBracket │
 └───────┴──────────────┘
 
+.:: = happy puppy syntax
 
 ```

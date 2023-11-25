@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace CuteCCompiler;
@@ -5,7 +6,7 @@ namespace CuteCCompiler;
 public class VariableExpression : Expression
 {
     public CuteToke Variable { get; }
-    public override string ToString() => Variable.Data.Str;
+    public override string ToString() => "VarExp (" + Variable.Data.Str + ")";
 
     public VariableExpression(List<CuteToke> exp) : base(exp)
     {
@@ -17,7 +18,7 @@ public class ConstantExpression : Expression
 {
     public CuteToke Value { get; }
 
-    public override string ToString() => Value.Data.Str;
+    public override string ToString() => "Const Expr (" + Value.Data.Str + ")";
 
     public ConstantExpression(List<CuteToke> exp) : base(exp)
     {
@@ -31,11 +32,10 @@ public class MathExpression : Expression
     public Expression Right { get; }
     public CuteToke Opp { get; }
 
-    public override string ToString() => $"{Left} {Opp.Data.Str} {Right}";
+    public override string ToString() => $"Math Expr ({Left}) {Opp.Data.Str} ({Right})";
 
     public MathExpression(List<CuteToke> exp) : base(exp)
     {
-        
         Left = FromData(exp[0]);
         Opp = exp[1];
         Right = FromData(exp[2]);
@@ -53,6 +53,34 @@ public class NothingExpression : Expression
     public override string ToString() => "(nothing)";
 }
 
+public class FuncCallExpression : Expression
+{
+    public CuteToke Arg
+    {
+        get
+        {
+            if (ExpData.Count > 2) return ExpData[2];
+            return CuteToke.Void;
+        }
+    }
+
+    public CuteToke FuncName
+    {
+        get
+        {
+            if (ExpData.Count > 0) return ExpData[0];
+            return CuteToke.Void;
+        }
+    }
+
+
+    public FuncCallExpression(List<CuteToke> exp) : base(exp)
+    {
+    }
+
+    public override string ToString() => $"({FuncName.Data.Str} ( {Arg.Data.Str} ))";
+}
+
 public class Expression
 {
     protected static List<List<CuteToke>> SplitFunctionArgVarNames(List<CuteToke> parenBody)
@@ -62,6 +90,7 @@ public class Expression
         var ret = new List<List<CuteToke>>();
         while (ts.Next(out var token))
         {
+            Debug.Assert(token != null, nameof(token) + " != null");
             if (token.Kind == CuteTokenKind.Comma)
             {
                 ret.Add(buff);
@@ -81,11 +110,12 @@ public class Expression
     {
         var ts = new TokenStream(exp.ToArray());
 
-        if (ts.Peek(0).Kind == CuteTokenKind.Assignment) ts.Next();
+        if (ts.Peek(0)!.Kind == CuteTokenKind.Assignment) ts.Next();
 
         List<CuteToke> buff = new();
-        while (ts.Next(out CuteToke? c))
+        while (ts.Next(out var c))
         {
+            Debug.Assert(c != null, nameof(c) + " != null");
             buff.Add(c);
 
             if (buff[0].Kind == CuteTokenKind.TypedValue)
@@ -106,6 +136,13 @@ public class Expression
                 return new VariableExpression(buff);
             }
 
+
+            if (buff.Count > 2)
+                if (buff[0].Kind == CuteTokenKind.VarName && CuteTokenKindExt.ValueTypes.Contains(buff[2].Kind))
+                {
+                    buff.AddRange(ts.ReadEndLineType());
+                    return new FuncCallExpression(buff);
+                }
 
             if (buff.Count > 1)
                 if (CuteTokenKindExt.MathTokens.Contains(buff[1].Kind))

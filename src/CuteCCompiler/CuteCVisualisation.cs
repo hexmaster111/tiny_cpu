@@ -6,7 +6,7 @@ namespace CuteCCompiler;
 public static class CuteCVisualisation
 {
     public static void DrawCompileSteps(string code, List<TokenWord> tokenWords, List<CuteToke> tokens,
-        ProgramRoot programRoot)
+        ProgramRoot programRoot, CuteCVariableTable variableTable)
     {
         var grid = new Grid();
 
@@ -19,7 +19,11 @@ public static class CuteCVisualisation
         }
 
         var t = new Tree("");
-        Print(programRoot, t.AddNode(""));
+        DrawNodeOneLineInfo(programRoot, t.AddNode("Program Syntax Translation"));
+
+        var varTblGfx = GetVarTableGraphic(variableTable);
+
+        t.AddNode("Var Table").AddNode(varTblGfx);
 
         grid.AddColumns(
             new GridColumn()
@@ -36,12 +40,25 @@ public static class CuteCVisualisation
         AnsiConsole.Write(grid);
     }
 
-    static void Print(ICuteLexNode node, TreeNode parent)
+    private static Table GetVarTableGraphic(CuteCVariableTable variableTable)
     {
-        var newParent = parent.AddNode(node.GetOneLineInfo());
+        var ret = new Table();
+        ret.AddColumns("Fullname", "Var Slot");
+        foreach (var kvp in variableTable.VarTable)
+        {
+            ret.AddRow(new Markup(kvp.Key), new Markup(kvp.Value.ToString("000")));
+        }
+
+        return ret;
+    }
+
+
+    static void DrawNodeOneLineInfo(ICuteLexNode node, TreeNode parent)
+    {
+        var newParent = parent.AddNode(node.NameSpace + "   " + node.GetOneLineInfo());
         foreach (var cn in node.Children)
         {
-            Print(cn, newParent);
+            DrawNodeOneLineInfo(cn, newParent);
         }
     }
 }

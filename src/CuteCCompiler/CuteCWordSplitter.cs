@@ -49,6 +49,8 @@ internal static class CuteCWordSplitter
         var sr = new StringReader(input);
         wordBuff = "";
         var words = new List<TokenWord>();
+        bool consumingComment = false;
+        string commentTrashBuf = "";
         while (true)
         {
             var read = sr.Read();
@@ -57,6 +59,28 @@ internal static class CuteCWordSplitter
 
             var readCh = (char)read;
             var peekCh = (char)peek;
+
+            if (consumingComment)
+            {
+                if (readCh == '\n')
+                {
+                    consumingComment = false;
+                    continue;
+                }
+
+                commentTrashBuf += readCh;
+                continue;
+            }
+
+
+            if (readCh == '/' && peekCh == '/')
+            {
+                //this is a comment! we get to throw out up to the next new line
+                consumingComment = true;
+                commentTrashBuf += readCh;
+                //TODO: something with comment trash buffer, right now it just gets tossed
+                continue;
+            }
 
             if (!CuteCConst.IsWhiteSpace(readCh))
             {
