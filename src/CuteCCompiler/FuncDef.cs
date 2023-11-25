@@ -61,7 +61,12 @@ public class FuncDef : ICuteLexNode
         };
 
 
+        foreach (var childNode in Children)
+        {
+            ret.AddRange(childNode.ExpelInstructions(vt));
+        }
 
+        ret.Add(new AsmInst(new TinyAsmTokenizer.Token(TinyAsmTokenizer.Token.TokenType.RET)));
 
         return ret;
     }

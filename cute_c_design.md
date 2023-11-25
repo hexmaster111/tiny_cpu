@@ -25,10 +25,15 @@ int b = 69;  // SETREG GP_I32_0 69          ;SET REGISTER 0 TO VALUE 42
 // 0x03 - main::x
 // 0x04 - main::z
 // 0x05 - main::y
+// 0x06 - main::w
 //LBL FUNC_MAIN:
 void main(){
     int x = 2;         // SETREG GP_I32_0 2
                        // MEM_WRITE GP_I32_0, 0x03
+                       
+                       
+    int w = x;         // MEM_READ GP_I32_0 0x06
+                       // MEM_WRITE GP_I32_0 0x03
 
     int z = a + b;     // MEM_READ GP_I32_0 0x01   ; read global::a into gp_i32_0
                        // MEM_READ GP_I32_1 0x02   ; read global::b into gp_i32_1

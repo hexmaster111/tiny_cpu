@@ -139,6 +139,11 @@ public class Expression
                 return new NothingExpression(buff);
             }
 
+            if (buff[0].Kind == CuteTokenKind.VarName && (buff.Count > 1 && buff[1].Kind == CuteTokenKind.EndLine))
+            {
+                buff.AddRange(ts.ReadEndLineType());
+                return new VariableExpression(buff);
+            }
 
             if (buff[0].Kind == CuteTokenKind.VarName && exp.Count == 1)
             {

@@ -31,6 +31,11 @@ public class TinyAsmTokenizer
         string ArgumentOneData = ""
     )
     {
+        public override string ToString()
+        {
+            return Type + ArgumentZeroData + " " + ArgumentOneData;
+        }
+
         public static Token? FromLine(string line)
         {
             var commentOut = line.Split(';');

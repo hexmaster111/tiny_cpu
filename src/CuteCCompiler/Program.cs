@@ -44,7 +44,6 @@ public class CuteCFunctionTable
 public class AsmInst
 {
     public TinyAsmTokenizer.Token AssemblyToken { get; }
-    
     public AsmInst(TinyAsmTokenizer.Token asmToken)
     {
         //TODO: Add location info for debugger
@@ -109,5 +108,14 @@ public class CuteCVariableTable
 
     private CuteCVariableTable()
     {
+    }
+
+    public string GetVariableNumber(CuteToke variableName, string ns)
+    {
+        var fullName = ns + variableName.Data.Str;
+
+        if (!VarTable.TryGetValue(fullName, out int id)) throw new Exception("Variable Not found");
+
+        return id.ToString();
     }
 }

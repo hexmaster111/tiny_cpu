@@ -30,6 +30,8 @@ public class FuncCall : ICuteLexNode
 
     public List<AsmInst> ExpelInstructions(CuteCVariableTable vt)
     {
+        return new();
+        //TODO
         throw new NotImplementedException();
     }
 }

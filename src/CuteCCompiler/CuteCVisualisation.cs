@@ -28,7 +28,7 @@ public static class CuteCVisualisation
         var stmtAssmTbl = GetStatementTable(asm);
 
         t.AddNode("Statement List").AddNode(stmtAssmTbl);
-        
+
         grid.AddColumns(
             new GridColumn()
             {
@@ -47,13 +47,27 @@ public static class CuteCVisualisation
     private static Table GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
     {
         var ret = new Table();
-        ret.AddColumns("Kind", "Var Slot");
+        ret.AddColumns("TokenInfo", "Asm");
         foreach (var asm in cuteCAsmTokens)
         {
-            ret.AddRow(asm.Node.Kind.ToString(), "");
+            ret.AddRow(new Markup(asm.Node.GetOneLineInfo()), GetStatementTable(asm));
         }
+
         return ret;
     }
+
+    private static Table GetStatementTable(CuteCAsmToken asm)
+    {
+        var tbl = new Table();
+        tbl.AddColumns("Instructions", "dbg");
+        foreach (var asmInst in asm.Instructions)
+        {
+            tbl.AddRow(asmInst.AssemblyToken.ToString(), "dbg");
+        }
+
+        return tbl;
+    }
+
 
     private static Table GetVarTableGraphic(CuteCVariableTable variableTable)
     {

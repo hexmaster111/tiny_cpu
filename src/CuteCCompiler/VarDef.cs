@@ -44,18 +44,35 @@ public class VarDef : ICuteLexNode
                 ))
             };
         }
-        
-        
-        if (exp.GetType() == typeof(MathExpression))
+
+
+      
+        if (exp.GetType() == typeof(VarDef))
         {
             throw new NotImplementedException();
-            var e = exp as MathExpression;
-            return new List<AsmInst>()
-            {
-                
-            };
         }
-        
+
+        if (exp.GetType() == typeof(VariableExpression))
+        {
+            var e = exp as VariableExpression;
+            var ret = new List<AsmInst>();
+            ret.Add(new AsmInst(
+                new TinyAsmTokenizer.Token(
+                    TinyAsmTokenizer.Token.TokenType.SETREG,
+                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.NONE,
+                    TinyCCallConventions.ScratchRegister0.ToString())
+                ));
+            ret.Add(new (new TinyAsmTokenizer.Token(
+                 TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
+                 TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                 TinyAsmTokenizer.Token.ArgumentType.CONST,
+                 vt.GetVariableNumber(VariableName, NameSpace)
+                )));
+            
+            return ret;
+        }
+
 
         // ret.Add(new AsmInst( new TinyAsmTokenizer.Token()));
 
