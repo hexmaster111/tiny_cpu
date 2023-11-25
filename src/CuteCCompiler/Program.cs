@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using TinyAssemblerLib;
 
 namespace CuteCCompiler;
 
@@ -10,13 +11,13 @@ internal class Program
             """
             //var table
             // global::a - 0x00
-            int a = 42;
+            int globalVarA = 42;
 
 
             //global::fn_main::c - 0x01
             fn main (  ) : void
             {
-                int c = a + 69;
+                int lv_demo = globalVarA;
             }
 
             fn other_func():void{int c=0;}
@@ -29,11 +30,54 @@ internal class Program
         var tokens = CuteCTokenizer.Tokenize(words);
         var rootToken = new ProgramRoot(tokens);
         CuteCLexer.Lex(rootToken);
-
         var varTable = CuteCVariableTable.MakeTable(rootToken);
-
-        CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable);
+        var asm = CuteCAsmToken.FromTree(varTable, rootToken);
+        CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, asm);
         Debugger.Break();
+    }
+}
+
+public class CuteCFunctionTable
+{
+}
+
+public class AsmInst
+{
+    public TinyAsmTokenizer.Token AssemblyToken { get; }
+    
+    public AsmInst(TinyAsmTokenizer.Token asmToken)
+    {
+        //TODO: Add location info for debugger
+
+        AssemblyToken = asmToken;
+    }
+}
+
+public class CuteCAsmToken
+{
+    public ICuteLexNode Node { get; }
+    public List<AsmInst> Instructions { get; }
+
+    public CuteCAsmToken(ICuteLexNode node, CuteCVariableTable vt)
+    {
+        Node = node;
+        Instructions = Node.ExpelInstructions(vt);
+    }
+
+    public static CuteCAsmToken[] FromTree(CuteCVariableTable variableTable, ProgramRoot programRoot)
+    {
+        var ret = new List<CuteCAsmToken>();
+        UnwrapTree(programRoot, variableTable, ret);
+        return ret.ToArray();
+    }
+
+    private static void UnwrapTree(ICuteLexNode c, CuteCVariableTable variableTable, List<CuteCAsmToken> currPrg)
+    {
+        currPrg.Add(new CuteCAsmToken(c, variableTable));
+        foreach (var child in c.Children)
+        {
+            UnwrapTree(child, variableTable, currPrg);
+        }
     }
 }
 

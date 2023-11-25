@@ -17,13 +17,15 @@ public class VariableExpression : Expression
 public class ConstantExpression : Expression
 {
     public CuteToke Value { get; }
-
+    public string AsmStringValue => ParseAsmStringValue(Value.Data.Str);
+    
     public override string ToString() => "Const Expr (" + Value.Data.Str + ")";
 
     public ConstantExpression(List<CuteToke> exp) : base(exp)
     {
         Value = exp[0];
     }
+
 }
 
 public class MathExpression : Expression
@@ -83,6 +85,13 @@ public class FuncCallExpression : Expression
 
 public class Expression
 {
+    
+     
+    public static string ParseAsmStringValue(string tokenValue)
+    {
+        return "0x" + int.Parse(tokenValue).ToString("X2");
+    }
+    
     protected static List<List<CuteToke>> SplitFunctionArgVarNames(List<CuteToke> parenBody)
     {
         var ts = new TokenStream(parenBody.ToArray());

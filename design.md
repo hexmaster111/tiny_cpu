@@ -120,8 +120,8 @@ FLAGS_0 USAGE TABLE
 |      B4 | JMP_C         | [SRC] CONSTANT VALUE |                      |                                      | x      |
 |      B5 | MEM_READ_R_C  | [DST] REGISTER       | [SRC] CONSTANT       | READS FROM const -> register         | x      |
 |      B6 | MEM_READ_R_R  | [DST] REGISTER       | [SRC] REGISTER       | READS FROM mem@regval -> register    | x      |
-|      B7 | MEM_WRITE_R_C | [DST] REGISTER [val] | [SRC] CONSTANT [adr] | WRITES FROM register -> memAddress   | x      |
-|      B8 | MEM_WRITE_R_R | [DST] REGISTER       | [SRC] REGISTER       | WRITES FROM register -> mem@regval   | x      |
+|      B7 | MEM_WRITE_R_C | [SRC] REGISTER [val] | [DST] CONSTANT [adr] | WRITES FROM register -> memAddress   | x      |
+|      B8 | MEM_WRITE_R_R | [SRC] REGISTER       | [DST] REGISTER       | WRITES FROM register -> mem@regval   | x      |
 |      FF | HALT          |                      |                      |                                      | x      |
 
 ```asm

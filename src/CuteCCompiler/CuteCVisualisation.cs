@@ -6,7 +6,7 @@ namespace CuteCCompiler;
 public static class CuteCVisualisation
 {
     public static void DrawCompileSteps(string code, List<TokenWord> tokenWords, List<CuteToke> tokens,
-        ProgramRoot programRoot, CuteCVariableTable variableTable)
+        ProgramRoot programRoot, CuteCVariableTable variableTable, CuteCAsmToken[] asm)
     {
         var grid = new Grid();
 
@@ -25,6 +25,10 @@ public static class CuteCVisualisation
 
         t.AddNode("Var Table").AddNode(varTblGfx);
 
+        var stmtAssmTbl = GetStatementTable(asm);
+
+        t.AddNode("Statement List").AddNode(stmtAssmTbl);
+        
         grid.AddColumns(
             new GridColumn()
             {
@@ -38,6 +42,17 @@ public static class CuteCVisualisation
         grid.AddRow(new Panel(code), tbl, t);
         // grid.AddRow(new JsonText(Newtonsoft.Json.JsonConvert.SerializeObject(programRoot)));
         AnsiConsole.Write(grid);
+    }
+
+    private static Table GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
+    {
+        var ret = new Table();
+        ret.AddColumns("Kind", "Var Slot");
+        foreach (var asm in cuteCAsmTokens)
+        {
+            ret.AddRow(asm.Node.Kind.ToString(), "");
+        }
+        return ret;
     }
 
     private static Table GetVarTableGraphic(CuteCVariableTable variableTable)

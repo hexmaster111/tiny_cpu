@@ -158,3 +158,21 @@ PROGRAM ROOT:
 .:: = happy puppy syntax
 
 ```
+```
+"""
+//var table
+// global::a - 0x00
+int globalVarA = 42;
+
+
+//global::fn_main::c - 0x01
+fn main (  ) : void
+{
+    int lv_demo = globalVarA;
+}
+
+fn other_func():void{int c=0;}
+
+main();
+""";
+```
