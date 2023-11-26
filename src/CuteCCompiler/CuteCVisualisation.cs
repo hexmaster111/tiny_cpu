@@ -6,9 +6,9 @@ namespace CuteCCompiler;
 public static class CuteCVisualisation
 {
     public static void DrawCompileSteps(string code, List<TokenWord> tokenWords, List<CuteToke> tokens,
-        ProgramRoot programRoot, CuteCVariableTable variableTable, CuteCAsmToken[] asm)
+        ProgramRoot programRoot, CuteCVariableTable variableTable, CuteCAsmToken[] asm, List<AsmInst> finalOutput)
     {
-        var grid = new Grid();
+        var rightGrid = new Grid();
 
         var tbl = new Table().AddColumns("char", "Code", "Words");
         var zip = tokenWords.Zip(tokens);
@@ -29,43 +29,30 @@ public static class CuteCVisualisation
 
         t.AddNode("Statement List").AddNode(stmtAssmTbl);
 
-        grid.AddColumns(
-            new GridColumn()
-            {
-            }, new GridColumn()
-            {
-            }
-            , new GridColumn()
-            {
-            }
-        );
-        grid.AddRow(new Panel(code), tbl, t);
+        var leftGrid = new Grid();
+        rightGrid.AddColumns(new GridColumn(), new GridColumn(), new GridColumn());
+        leftGrid.AddColumns(new GridColumn(), new GridColumn());
+        leftGrid.AddRow(rightGrid);
+        rightGrid.AddRow(new Panel(code), tbl, t);
         // grid.AddRow(new JsonText(Newtonsoft.Json.JsonConvert.SerializeObject(programRoot)));
-        AnsiConsole.Write(grid);
+        AnsiConsole.Write(rightGrid);
     }
 
-    private static Table GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
+    private static TreeNode GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
     {
-        var ret = new Table();
-        ret.AddColumns("TokenInfo", "Asm");
+        var ret = new TreeNode(new Markup("ASM"));
+        var n1 = ret.AddNode("TokenInfo");
         foreach (var asm in cuteCAsmTokens)
         {
-            ret.AddRow(new Markup(asm.Node.GetOneLineInfo()), GetStatementTable(asm));
+            var n2 = n1.AddNode(new Markup(asm.Node.GetOneLineInfo()));
+            var n3 = n2.AddNode("STATEMENTS:");
+            foreach (var inst in asm.Instructions)
+            {
+                n3.AddNode(inst.AssemblyToken.ToString());
+            }
         }
 
         return ret;
-    }
-
-    private static Table GetStatementTable(CuteCAsmToken asm)
-    {
-        var tbl = new Table();
-        tbl.AddColumns("Instructions", "dbg");
-        foreach (var asmInst in asm.Instructions)
-        {
-            tbl.AddRow(asmInst.AssemblyToken.ToString(), "dbg");
-        }
-
-        return tbl;
     }
 
 

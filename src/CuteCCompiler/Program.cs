@@ -32,18 +32,17 @@ internal class Program
         CuteCLexer.Lex(rootToken);
         var varTable = CuteCVariableTable.MakeTable(rootToken);
         var asm = CuteCAsmToken.FromTree(varTable, rootToken);
-        CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, asm);
+        var finalOutput = CuteCAsmToken.FromTokens(asm);
+
+        CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, asm, finalOutput);
         Debugger.Break();
     }
-}
-
-public class CuteCFunctionTable
-{
 }
 
 public class AsmInst
 {
     public TinyAsmTokenizer.Token AssemblyToken { get; }
+
     public AsmInst(TinyAsmTokenizer.Token asmToken)
     {
         //TODO: Add location info for debugger
@@ -77,6 +76,18 @@ public class CuteCAsmToken
         {
             UnwrapTree(child, variableTable, currPrg);
         }
+    }
+
+    public static List<AsmInst> FromTokens(CuteCAsmToken[] asm)
+    {
+        var all = asm.Select(x => x.Instructions);
+        var ret = new List<AsmInst>();
+        foreach (var some in all)
+        {
+            ret.AddRange(some);
+        }
+
+        return ret;
     }
 }
 

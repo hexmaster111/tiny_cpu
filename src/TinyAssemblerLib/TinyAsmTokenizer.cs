@@ -33,7 +33,7 @@ public class TinyAsmTokenizer
     {
         public override string ToString()
         {
-            return Type + ArgumentZeroData + " " + ArgumentOneData;
+            return Type + " " + ArgumentZeroData + " " + ArgumentOneData;
         }
 
         public static Token? FromLine(string line)
