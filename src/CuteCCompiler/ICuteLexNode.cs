@@ -12,7 +12,7 @@ public interface ICuteLexNode
     public List<ICuteLexNode> Children { get; set; }
     public Expression Expression => Expression.FromData(ExpressionData);
     public string ProvidedNameSpace { get; }
-    public string? NameSpace { get; set; }
+    public string NameSpace { get; set; }
     string GetOneLineInfo();
     List<AsmInst> ExpelInstructions(CuteCVariableTable vt);
 }

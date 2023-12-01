@@ -49,6 +49,9 @@ public class AsmInst
 
         AssemblyToken = asmToken;
     }
+
+    public string GetFileText() =>
+     $"{AssemblyToken.Type} {AssemblyToken.ArgumentZeroData} {AssemblyToken.ArgumentOneData}";
 }
 
 public class CuteCAsmToken

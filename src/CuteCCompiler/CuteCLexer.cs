@@ -61,7 +61,7 @@ public static class CuteCLexer
         }
     }
 
-    
+
 
     // ends with a end line ;
     public static List<CuteToke> ReadEndLineType(this TokenStream ts)
@@ -128,6 +128,10 @@ public static class NameSpace
     public const string NS_MARK = "::";
     public static string Combine(string a, string b)
     {
+        if (string.IsNullOrWhiteSpace(a)) throw new Exception(nameof(a));
+        if (string.IsNullOrWhiteSpace(b)) return a;
+
+
         return a + NS_MARK + b;
     }
 }

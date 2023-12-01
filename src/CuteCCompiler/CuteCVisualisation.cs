@@ -1,5 +1,5 @@
+using System.Text;
 using Spectre.Console;
-using Spectre.Console.Json;
 
 namespace CuteCCompiler;
 
@@ -30,12 +30,23 @@ public static class CuteCVisualisation
         t.AddNode("Statement List").AddNode(stmtAssmTbl);
 
         var leftGrid = new Grid();
-        rightGrid.AddColumns(new GridColumn(), new GridColumn(), new GridColumn());
+        rightGrid.AddColumns(new GridColumn(), new GridColumn(), new GridColumn(), new GridColumn());
         leftGrid.AddColumns(new GridColumn(), new GridColumn());
         leftGrid.AddRow(rightGrid);
-        rightGrid.AddRow(new Panel(code), tbl, t);
-        // grid.AddRow(new JsonText(Newtonsoft.Json.JsonConvert.SerializeObject(programRoot)));
+        rightGrid.AddRow(new Panel(code), new Panel(GetAsmText(finalOutput)), tbl, t);
         AnsiConsole.Write(rightGrid);
+    }
+
+    private static string GetAsmText(List<AsmInst> finalOutput)
+    {
+        var sb = new StringBuilder();
+        foreach (var line in finalOutput)
+        {
+            sb.AppendLine(line.GetFileText());
+        }
+
+        return sb.ToString();
+
     }
 
     private static TreeNode GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
@@ -71,7 +82,7 @@ public static class CuteCVisualisation
 
     static void DrawNodeOneLineInfo(ICuteLexNode node, TreeNode parent)
     {
-        var newParent = parent.AddNode(node.NameSpace + "   " + node.GetOneLineInfo());
+        var newParent = parent.AddNode(NameSpace.Combine(node.NameSpace, node.GetOneLineInfo()));
         foreach (var cn in node.Children)
         {
             DrawNodeOneLineInfo(cn, newParent);
