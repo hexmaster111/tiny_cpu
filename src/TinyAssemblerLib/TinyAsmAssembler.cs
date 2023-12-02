@@ -293,8 +293,10 @@ public class TinyAsmAssembler
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(argOneData)),
             TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[] { GetRegisterByteConst(argOneData) },
-            TinyAsmTokenizer.Token.ArgumentType.STR => throw new Exception("String arg not valid with set register"),
-            TinyAsmTokenizer.Token.ArgumentType.NONE => throw new Exception("Expected a register or a constant"),
+            TinyAsmTokenizer.Token.ArgumentType.STR => throw new Exception(
+                $"String arg not valid with set register for {asmToken}"),
+            TinyAsmTokenizer.Token.ArgumentType.NONE => throw new Exception(
+                $"Expected a register or a constant for {asmToken}"),
             _ => throw new ArgumentOutOfRangeException()
         };
         var argZeroData = GetRegisterByteConst(asmToken.Token.ArgumentZeroData);
@@ -342,6 +344,11 @@ public class TinyAsmAssembler
 
 public class AsmToken : IFreezable
 {
+    public override string ToString()
+    {
+        return $"{Token.Type} {Token.ArgumentZeroData} {Token.ArgumentOneData} ";
+    }
+
     public TinyAsmTokenizer.Token Token { get; init; }
 
     private byte[] _data;

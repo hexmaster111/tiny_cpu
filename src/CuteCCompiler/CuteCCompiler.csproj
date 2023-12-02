@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\TinyAssemblerLib\TinyAssemblerLib.csproj" />
+      <ProjectReference Include="..\TinyRuntime\TinyRuntime.csproj" />
     </ItemGroup>
 
 </Project>

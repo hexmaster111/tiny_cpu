@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
+using TinyAssemblerLib;
+using TinyCpuLib;
 
 namespace CuteCCompiler;
 
@@ -17,40 +20,77 @@ internal class Program
             """;
 
 
-        var words = CuteCWordSplitter.Wordify(input);
-        var tokens = CuteCTokenizer.Tokenize(words);
-        var rootToken = new ProgramRoot(tokens);
-        CuteCLexer.Lex(rootToken);
-        var varTable = CuteCVariableTable.MakeTable(rootToken);
-        var funcTable = new CuteCFuncTable(rootToken);
-        var asm = CuteCAsmToken.FromTree(varTable, funcTable, rootToken);
-        var finalOutput = CuteCAsmToken.ConvertToAsm(asm);
-        CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, asm, finalOutput);
-        Debugger.Break();
-    }
-}
+        ImmutableArray<AsmInst> asm;
 
-public class CuteCFuncTable
-{
-    // (namespace)  (function names in namespace) (function def) 
-    private Dictionary<string, Dictionary<string, FuncDef>> _funcDictionary = new();
-    public FuncDef FindFunctionInNameSpace(string ns, string funcName)
-    {
-        return _funcDictionary[ns][funcName];
-    }
+        #region Compile
 
-    public CuteCFuncTable(ProgramRoot rootToken)
-    {
-        var fns = rootToken.FindFuncDefs();
-        foreach (var fn in fns)
+        try
         {
-            if (!_funcDictionary.ContainsKey(fn.NameSpace))
-                _funcDictionary.Add(fn.NameSpace, new Dictionary<string, FuncDef>());
+            var words = CuteCWordSplitter.Wordify(input);
+            var tokens = CuteCTokenizer.Tokenize(words);
+            var rootToken = new ProgramRoot(tokens);
+            CuteCLexer.Lex(rootToken);
+            var varTable = CuteCVariableTable.MakeTable(rootToken);
+            var funcTable = new CuteCFuncTable(rootToken);
+            var cuteCAsmTokens = CuteCAsmToken.FromTree(varTable, funcTable, rootToken);
+            List<AsmInst> asmOutput = CuteCAsmToken.ConvertToAsm(cuteCAsmTokens);
+            asm = asmOutput.ToImmutableArray();
 
-            if (!_funcDictionary[fn.NameSpace].ContainsKey(fn.FuncName.Data.Str))
-                _funcDictionary[fn.NameSpace].Add(fn.FuncName.Data.Str, fn);
+            #endregion
 
-            _funcDictionary[fn.NameSpace][fn.FuncName.Data.Str] = fn;
+            CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, cuteCAsmTokens, asmOutput);
         }
+        catch (Exception ex)
+        {
+            throw new Exception("Compiler Error", ex);
+        }
+
+        Console.WriteLine("Compiled Ok!");
+
+        #region Assemble
+
+        byte[] finalExe;
+
+        try
+        {
+            var asmTokens = asm.Select(x => x.AssemblyToken).ToImmutableArray();
+            var assembler = new TinyAsmAssembler(asmTokens);
+            finalExe = assembler.Assemble();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Assembler Error", ex);
+        }
+
+        Console.WriteLine("Assembled Ok!");
+
+        #endregion
+
+
+        #region Runtime
+
+        try
+        {
+            var key = Console.ReadKey();
+            bool singleStep = false;
+            if (key.Key == ConsoleKey.R) singleStep = false;
+            else if (key.Key == ConsoleKey.D) singleStep = true;
+            else
+            {
+                Debugger.Break();
+                return;
+            }
+
+            TinyRuntime.RuntimeMain(new TinyCpu()
+            {
+                TCpuExe = finalExe
+            }, singleStep);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Runtime Exception", ex);
+        }
+
+        #endregion
     }
 }
