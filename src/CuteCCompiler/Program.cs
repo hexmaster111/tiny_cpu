@@ -11,12 +11,13 @@ internal class Program
     {
         var input =
             """
-            int globalVarA = 42;
             fn main():void {
-                int lv_demo=globalVarA;
+                int globalVarA = 42;
+                
+                int lv_demo=globalVarA; // MEM_READ GP_I32_0 0xXX
+                                        // MEM_WRITE GP_I32_0 0xXX
             }
             fn other_func ( ) : void { int x=0; }
-            main ();
             """;
 
 
@@ -34,7 +35,22 @@ internal class Program
             var funcTable = new CuteCFuncTable(rootToken);
             var cuteCAsmTokens = CuteCAsmToken.FromTree(varTable, funcTable, rootToken);
             var asmOutput = CuteCAsmToken.ConvertToAsm(cuteCAsmTokens);
-            asm = asmOutput.ToImmutableArray();
+
+            //To the top of the asm instructions, we apply our "runtime" code, just call main, and halt 
+            var injectedRuntimeInjst = new List<AsmInst>()
+            {
+                //Call user main
+                new(new TinyAsmTokenizer.Token(TinyAsmTokenizer.Token.TokenType.CALL,
+                    TinyAsmTokenizer.Token.ArgumentType.STR,
+                    TinyAsmTokenizer.Token.ArgumentType.NONE,
+                    ".::main")),
+
+                //Halt the cpu
+                new(new TinyAsmTokenizer.Token(TinyAsmTokenizer.Token.TokenType.HALT))
+            };
+
+
+            asm = injectedRuntimeInjst.Concat(asmOutput).ToImmutableArray();
             CuteCVisualisation.DrawCompileSteps(
                 input, words, tokens, rootToken, varTable, funcTable, cuteCAsmTokens, asmOutput
             );
@@ -58,8 +74,8 @@ internal class Program
         try
         {
             var asmTokens = asm.Select(x => x.AssemblyToken).ToImmutableArray();
-            var assembler = new TinyAsmAssembler(asmTokens);
-            finalExe = assembler.Assemble();
+            var hec = CAsmAssembler.AssembleFromTokens(asmTokens);
+            finalExe = hec.TinyCpuCode;
         }
         catch (Exception ex)
         {
@@ -78,6 +94,8 @@ internal class Program
 
         try
         {
+            Console.WriteLine("Press R to run, or D to debug");
+
             var key = Console.ReadKey();
             bool singleStep = false;
             if (key.Key == ConsoleKey.R) singleStep = false;
@@ -96,7 +114,7 @@ internal class Program
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Error Running {ex.Message}");
+            Console.WriteLine($"Runtime Exception: {ex.Message}");
             Console.ResetColor();
             throw new Exception("Runtime Exception", ex);
         }

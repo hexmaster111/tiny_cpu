@@ -58,7 +58,7 @@ public static class TinyRuntime
     {
         while (!tinyCpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT))
         {
-            tinyCpu.DumpState();
+            Console.WriteLine(TinyCpuVisualisation.DumpState(tinyCpu));
             if (singleStep)
             {
                 WriteWithColoredShortcutKey("STEP", 'S', ConsoleColor.Green);

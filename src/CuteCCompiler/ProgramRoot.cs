@@ -8,8 +8,10 @@ public class ProgramRoot : ICuteLexNode
     public List<CuteToke> ExpressionData { get; } = new();
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.ProgramRoot;
     public List<ICuteLexNode> Children { get; set; } = new();
-    public string ProvidedNameSpace => ".";
+    public string ProvidedNameSpace => RootNameSpace;
     public string NameSpace { get; set; }
+    public const string RootNameSpace = ".";
+
     public string GetOneLineInfo() => " Everything in the program";
 
     public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)

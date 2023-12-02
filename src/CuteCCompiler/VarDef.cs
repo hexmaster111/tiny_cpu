@@ -27,10 +27,10 @@ public class VarDef : ICuteLexNode
         if (exp.GetType() == typeof(ConstantExpression))
         {
             var e = exp as ConstantExpression;
-            if (String.IsNullOrWhiteSpace(e.AsmStringValue)) throw new Exception("Missing arg");
+            if (string.IsNullOrWhiteSpace(e.AsmStringValue)) throw new Exception("Missing arg");
 
-            if (String.IsNullOrWhiteSpace(
-                    Expression.ParseAsmStringValue(vt.VarTable[VariableFullName].ToString())
+            if (string.IsNullOrWhiteSpace(
+                    Expression.CreateAsmStringValue(vt.VarTable[VariableFullName].ToString())
                 )) throw new Exception("Missing arg");
 
             var list = new List<AsmInst>();
@@ -46,34 +46,38 @@ public class VarDef : ICuteLexNode
                 TinyAsmTokenizer.Token.ArgumentType.REGISTER,
                 TinyAsmTokenizer.Token.ArgumentType.CONST,
                 TinyCCallConventions.ScratchRegister0.ToString(),
-                Expression.ParseAsmStringValue(vt.VarTable[VariableFullName].ToString())
+                Expression.CreateAsmStringValue(vt.VarTable[VariableFullName].ToString())
             )));
             return list;
         }
-
-
         if (exp.GetType() == typeof(VarDef))
         {
             throw new NotImplementedException();
         }
-
         if (exp.GetType() == typeof(VariableExpression))
         {
             var e = exp as VariableExpression;
-            var ret = new List<AsmInst>();
-            ret.Add(new AsmInst(
-                new TinyAsmTokenizer.Token(
-                    TinyAsmTokenizer.Token.TokenType.SETREG,
+
+            var destVarSlot = vt.GetVariableNumber(VariableName, NameSpace);
+            var srcVarSlot = vt.GetVariableNumber(e.Variable, NameSpace);
+            
+            var ret = new List<AsmInst>
+            {
+                new(new TinyAsmTokenizer.Token(
+                    TinyAsmTokenizer.Token.TokenType.MEM_READ,
                     TinyAsmTokenizer.Token.ArgumentType.REGISTER,
-                    TinyAsmTokenizer.Token.ArgumentType.NONE,
-                    TinyCCallConventions.ScratchRegister0.ToString())
-            ));
-            ret.Add(new(new TinyAsmTokenizer.Token(
-                TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
-                TinyAsmTokenizer.Token.ArgumentType.REGISTER,
-                TinyAsmTokenizer.Token.ArgumentType.CONST,
-                vt.GetVariableNumber(VariableName, NameSpace)
-            )));
+                    TinyAsmTokenizer.Token.ArgumentType.CONST,
+                    TinyCCallConventions.ScratchRegister0.ToString(),
+                    Expression.CreateAsmStringValue(srcVarSlot)
+                )),
+                new(new TinyAsmTokenizer.Token(
+                    TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
+                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.CONST,
+                    TinyCCallConventions.ScratchRegister0.ToString(),
+                    Expression.CreateAsmStringValue(destVarSlot)
+                ))
+            };
 
             return ret;
         }

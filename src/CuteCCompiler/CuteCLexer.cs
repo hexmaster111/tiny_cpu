@@ -6,7 +6,7 @@ public static class CuteCLexer
 {
     public static void Lex(ProgramRoot rootToken)
     {
-        rootToken.NameSpace = ".";
+        rootToken.NameSpace = ProgramRoot.RootNameSpace;
         var ts = new TokenStream(rootToken.ChildData.ToArray());
         Lex(rootToken, ts);
     }
@@ -60,7 +60,6 @@ public static class CuteCLexer
             Lex(child, new TokenStream(child.ChildData.ToArray()));
         }
     }
-
 
 
     // ends with a end line ;
@@ -126,6 +125,7 @@ public static class CuteCLexer
 public static class NameSpace
 {
     public const string NS_MARK = "::";
+
     public static string Combine(string a, string b)
     {
         if (string.IsNullOrWhiteSpace(a)) throw new Exception(nameof(a));

@@ -17,7 +17,7 @@ public class VariableExpression : Expression
 public class ConstantExpression : Expression
 {
     public CuteToke Value { get; }
-    public string AsmStringValue => ParseAsmStringValue(Value.Data.Str);
+    public string AsmStringValue => CreateAsmStringValue(Value.Data.Str);
     
     public override string ToString() => "Const Expr (" + Value.Data.Str + ")";
 
@@ -87,7 +87,7 @@ public class Expression
 {
     
      
-    public static string ParseAsmStringValue(string tokenValue)
+    public static string CreateAsmStringValue(string tokenValue)
     {
         return "0x" + int.Parse(tokenValue).ToString("X2");
     }

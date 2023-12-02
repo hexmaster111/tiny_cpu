@@ -21,7 +21,7 @@ internal class Program
 
         while (!_cpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT))
         {
-            _cpu.DumpState();
+            Console.WriteLine(TinyCpuVisualisation.DumpState(_cpu));
             Console.ReadKey();
             _cpu.Step();
         }

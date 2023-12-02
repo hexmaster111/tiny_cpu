@@ -16,11 +16,11 @@ public class TinyCpu
     /// <summary>
     ///     Runtime hondered cycle time
     /// </summary>
-    public int CycleTimeHz { get; set; } = 1; 
+    public int CycleTimeHz { get; set; } = 1;
 
     private int ReadInstructionIntAbs(int index) => BitConverter.ToInt32(TCpuExe, index);
     private byte ReadInstructionByteAbs(int index) => TCpuExe[index];
-    private byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
+    internal byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
     private int ReadInstructionIntRel(int ipOffset) => ReadInstructionIntAbs(Reg.INST_PTR + ipOffset);
 
     private RegisterIndex ReadInstructionRegisterIndexByteRel(int ipOffset) =>
@@ -67,7 +67,6 @@ public class TinyCpu
             }
                 break;
             case OpCode.MUL_R_C:
-
             {
                 var dest = ReadInstructionByteRel(1);
                 var constVal = ReadInstructionIntRel(2);
@@ -309,26 +308,7 @@ public class TinyCpu
         Reg.Data[(int)RegisterIndex.INST_PTR] = callAdress;
     }
 
-    public void DumpState()
-    {
-        Console.Clear();
-        Console.WriteLine($"---TICK {Cycles:00000000}-----");
-        Console.WriteLine($"{nameof(CpuRegisters.INST_PTR)}:{Reg.INST_PTR:X4} ");
-        Console.WriteLine($"{nameof(CpuRegisters.GP_I32_0)}:{Reg.GP_I32_0:X4} " +
-                          $"{nameof(CpuRegisters.GP_I32_1)}:{Reg.GP_I32_1:X4} " +
-                          $"{nameof(CpuRegisters.GP_I32_2)}:{Reg.GP_I32_2:X4}\n" +
-                          $"{nameof(CpuRegisters.FLAGS_0)}: " +
-                          $"{nameof(FLAGS_0_USAGE.HALT)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT)} " +
-                          $"{nameof(FLAGS_0_USAGE.EQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ)} " +
-                          $"{nameof(FLAGS_0_USAGE.NEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ)} " +
-                          $"{nameof(FLAGS_0_USAGE.GTR)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GTR)} " +
-                          $"{nameof(FLAGS_0_USAGE.GEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GEQ)} " +
-                          $"{nameof(FLAGS_0_USAGE.LES)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LES)} " +
-                          $"{nameof(FLAGS_0_USAGE.LEQ)}:{Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ)}");
-        var currInst = (OpCode)ReadInstructionByteRel(0);
-        Console.WriteLine($"Current Instruction :{currInst}");
-        Console.WriteLine(Memory.Debugger_ReadAllMemoryAddresses().MemoryDump());
-    }
+   
 
     public void LoadProgram(byte[] bytes) => TCpuExe = bytes;
 }

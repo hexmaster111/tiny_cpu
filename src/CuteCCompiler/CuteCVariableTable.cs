@@ -32,10 +32,17 @@ public class CuteCVariableTable
 
     public string GetVariableNumber(CuteToke variableName, string ns)
     {
-        var fullName = NameSpace.Combine(ns, variableName.Data.Str);
+        var localFullName = NameSpace.Combine(ns, variableName.Data.Str);
+        var globalFullName = NameSpace.Combine(ProgramRoot.RootNameSpace, variableName.Data.Str);
 
-        if (!VarTable.TryGetValue(fullName, out int id)) throw new Exception("Variable Not found");
+        var localGot = VarTable.TryGetValue(localFullName, out var id);
+        var globalGot = VarTable.TryGetValue(globalFullName, out var loc);
 
-        return id.ToString();
+        if (localGot) return id.ToString();
+        if (globalGot) return loc.ToString();
+        
+        throw new Exception($"Variable Not found " + "\r\nVar Search Locations:"+
+                                                         $"[comp debug: {ns}::{variableName.Data.Str}]" +
+                                                         $"[comp debug: .::{variableName.Data.Str}]");
     }
 }
