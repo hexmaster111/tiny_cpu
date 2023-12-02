@@ -36,7 +36,6 @@ internal class Program
             List<AsmInst> asmOutput = CuteCAsmToken.ConvertToAsm(cuteCAsmTokens);
             asm = asmOutput.ToImmutableArray();
 
-            #endregion
 
             CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, cuteCAsmTokens, asmOutput);
         }
@@ -44,6 +43,8 @@ internal class Program
         {
             throw new Exception("Compiler Error", ex);
         }
+
+        #endregion
 
         Console.WriteLine("Compiled Ok!");
 
