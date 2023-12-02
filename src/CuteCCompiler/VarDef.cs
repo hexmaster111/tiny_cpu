@@ -18,7 +18,7 @@ public class VarDef : ICuteLexNode
     public string? ProvidedNameSpace => null; //Nothing can be in a var def namespace
 
     public string GetOneLineInfo() =>
-        $"{VariableName.Data.Str} : {VariableType.Data.Str} = {((ICuteLexNode)this).Expression}";
+        $"VAR DEF | {VariableName.Data.Str} : {VariableType.Data.Str} = {((ICuteLexNode)this).Expression}";
 
 
     public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
@@ -27,23 +27,28 @@ public class VarDef : ICuteLexNode
         if (exp.GetType() == typeof(ConstantExpression))
         {
             var e = exp as ConstantExpression;
-            return new List<AsmInst>()
-            {
-                new(new TinyAsmTokenizer.Token(
-                    TinyAsmTokenizer.Token.TokenType.SETREG,
-                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
-                    TinyAsmTokenizer.Token.ArgumentType.CONST,
-                    TinyCCallConventions.ScratchRegister0.ToString(),
-                    e.AsmStringValue)
-                ),
-                new(new TinyAsmTokenizer.Token(
-                    TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
-                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
-                    TinyAsmTokenizer.Token.ArgumentType.CONST,
-                    TinyCCallConventions.ScratchRegister0.ToString(),
+            if (String.IsNullOrWhiteSpace(e.AsmStringValue)) throw new Exception("Missing arg");
+
+            if (String.IsNullOrWhiteSpace(
                     Expression.ParseAsmStringValue(vt.VarTable[VariableFullName].ToString())
-                ))
-            };
+                )) throw new Exception("Missing arg");
+
+            var list = new List<AsmInst>();
+            list.Add(new(new TinyAsmTokenizer.Token(
+                TinyAsmTokenizer.Token.TokenType.SETREG,
+                TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                TinyAsmTokenizer.Token.ArgumentType.CONST,
+                TinyCCallConventions.ScratchRegister0.ToString(),
+                e.AsmStringValue)
+            ));
+            list.Add(new(new TinyAsmTokenizer.Token(
+                TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
+                TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                TinyAsmTokenizer.Token.ArgumentType.CONST,
+                TinyCCallConventions.ScratchRegister0.ToString(),
+                Expression.ParseAsmStringValue(vt.VarTable[VariableFullName].ToString())
+            )));
+            return list;
         }
 
 

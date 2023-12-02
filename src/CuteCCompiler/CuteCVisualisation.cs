@@ -5,8 +5,16 @@ namespace CuteCCompiler;
 
 public static class CuteCVisualisation
 {
-    public static void DrawCompileSteps(string code, List<TokenWord> tokenWords, List<CuteToke> tokens,
-        ProgramRoot programRoot, CuteCVariableTable variableTable, CuteCAsmToken[] asm, List<AsmInst> finalOutput)
+    public static void DrawCompileSteps(
+        string code,
+        List<TokenWord> tokenWords,
+        List<CuteToke> tokens,
+        ProgramRoot programRoot,
+        CuteCVariableTable variableTable,
+        CuteCFuncTable funcTable,
+        CuteCAsmToken[] asm,
+        List<AsmInst> finalOutput
+    )
     {
         var rightGrid = new Grid();
 
@@ -19,15 +27,14 @@ public static class CuteCVisualisation
         }
 
         var t = new Tree("");
-        DrawNodeOneLineInfo(programRoot, t.AddNode("Program Syntax Translation"));
-
         var varTblGfx = GetVarTableGraphic(variableTable);
-
-        t.AddNode("Var Table").AddNode(varTblGfx);
-
         var stmtAssmTbl = GetStatementTable(asm);
-
+        
+        DrawNodeOneLineInfo(programRoot, t.AddNode("Program Syntax Translation"));
+        t.AddNode("Var Table").AddNode(varTblGfx);
+        t.AddNode("Function Table").AddNode(GetFuncTableGraphic(funcTable));
         t.AddNode("Statement List").AddNode(stmtAssmTbl);
+
 
         var leftGrid = new Grid();
         rightGrid.AddColumns(new GridColumn(), new GridColumn(), new GridColumn(), new GridColumn());
@@ -46,7 +53,6 @@ public static class CuteCVisualisation
         }
 
         return sb.ToString();
-
     }
 
     private static TreeNode GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
@@ -60,6 +66,23 @@ public static class CuteCVisualisation
             foreach (var inst in asm.Instructions)
             {
                 n3.AddNode(inst.AssemblyToken.ToString());
+            }
+        }
+
+        return ret;
+    }
+
+    private static Table GetFuncTableGraphic(CuteCFuncTable ft)
+    {
+        var ret = new Table();
+
+        ret.AddColumns("NAMESPACE", "FN NAME");
+        foreach (var kvp in ft.FuncDictionary)
+        {
+            foreach (var funcDef in kvp.Value)
+            {
+                var fnName = funcDef.Key;
+                ret.AddRow(new Markup(kvp.Key), new Markup(fnName));
             }
         }
 

@@ -19,7 +19,7 @@ public class VarAsi : ICuteLexNode
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.VarAssignment;
     public string? ProvidedNameSpace => null;
     public string NameSpace { get; set; }
-    public string GetOneLineInfo() => $"{VarBeingAssignedTo.Data.Str} = {((ICuteLexNode)this).Expression}";
+    public string GetOneLineInfo() => $"VAR ASSIGNMENT | {VarBeingAssignedTo.Data.Str} = {((ICuteLexNode)this).Expression}";
 
     public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
     {

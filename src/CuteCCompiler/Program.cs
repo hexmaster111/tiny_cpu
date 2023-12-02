@@ -33,14 +33,17 @@ internal class Program
             var varTable = CuteCVariableTable.MakeTable(rootToken);
             var funcTable = new CuteCFuncTable(rootToken);
             var cuteCAsmTokens = CuteCAsmToken.FromTree(varTable, funcTable, rootToken);
-            List<AsmInst> asmOutput = CuteCAsmToken.ConvertToAsm(cuteCAsmTokens);
+            var asmOutput = CuteCAsmToken.ConvertToAsm(cuteCAsmTokens);
             asm = asmOutput.ToImmutableArray();
-
-
-            CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, cuteCAsmTokens, asmOutput);
+            CuteCVisualisation.DrawCompileSteps(
+                input, words, tokens, rootToken, varTable, funcTable, cuteCAsmTokens, asmOutput
+            );
         }
         catch (Exception ex)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Compiler Assembling {ex.Message}");
+            Console.ResetColor();
             throw new Exception("Compiler Error", ex);
         }
 
@@ -60,6 +63,9 @@ internal class Program
         }
         catch (Exception ex)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error Assembling {ex.Message}");
+            Console.ResetColor();
             throw new Exception("Assembler Error", ex);
         }
 
@@ -89,6 +95,9 @@ internal class Program
         }
         catch (Exception ex)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error Running {ex.Message}");
+            Console.ResetColor();
             throw new Exception("Runtime Exception", ex);
         }
 

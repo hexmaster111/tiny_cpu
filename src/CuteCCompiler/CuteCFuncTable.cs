@@ -3,11 +3,11 @@
 public class CuteCFuncTable
 {
     // (namespace)  (function names in namespace) (function def) 
-    private Dictionary<string, Dictionary<string, FuncDef>> _funcDictionary = new();
+    internal readonly Dictionary<string, Dictionary<string, FuncDef>> FuncDictionary = new();
 
     public FuncDef FindFunctionInNameSpace(string ns, string funcName)
     {
-        return _funcDictionary[ns][funcName];
+        return FuncDictionary[ns][funcName];
     }
 
     public CuteCFuncTable(ProgramRoot rootToken)
@@ -15,13 +15,13 @@ public class CuteCFuncTable
         var fns = rootToken.FindFuncDefs();
         foreach (var fn in fns)
         {
-            if (!_funcDictionary.ContainsKey(fn.NameSpace))
-                _funcDictionary.Add(fn.NameSpace, new Dictionary<string, FuncDef>());
+            if (!FuncDictionary.ContainsKey(fn.NameSpace))
+                FuncDictionary.Add(fn.NameSpace, new Dictionary<string, FuncDef>());
 
-            if (!_funcDictionary[fn.NameSpace].ContainsKey(fn.FuncName.Data.Str))
-                _funcDictionary[fn.NameSpace].Add(fn.FuncName.Data.Str, fn);
+            if (!FuncDictionary[fn.NameSpace].ContainsKey(fn.FuncName.Data.Str))
+                FuncDictionary[fn.NameSpace].Add(fn.FuncName.Data.Str, fn);
 
-            _funcDictionary[fn.NameSpace][fn.FuncName.Data.Str] = fn;
+            FuncDictionary[fn.NameSpace][fn.FuncName.Data.Str] = fn;
         }
     }
 }
