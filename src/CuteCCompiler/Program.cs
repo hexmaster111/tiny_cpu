@@ -16,6 +16,8 @@ internal class Program
                 
                 int lv_demo=globalVarA; // MEM_READ GP_I32_0 0xXX
                                         // MEM_WRITE GP_I32_0 0xXX
+                                        
+                other_func();
             }
             fn other_func ( ) : void { int x=0; }
             """;

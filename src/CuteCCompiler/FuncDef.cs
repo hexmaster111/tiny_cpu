@@ -44,6 +44,7 @@ public class FuncDef : ICuteLexNode
     public List<ICuteLexNode> Children { get; set; } = new();
     public string ProvidedNameSpace => $"fn_{FuncName.Data.Str}";
     public string NameSpace { get; set; }
+    public string CallableName => CuteCCompiler.NameSpace.Combine(NameSpace, FuncName.Data.Str);
 
     public string GetOneLineInfo() =>
         $"fn {FuncName.Data.Str} ({ArgType.Data.Str} {LocalVarName.Data.Str}) => {Return.Data.Str}";

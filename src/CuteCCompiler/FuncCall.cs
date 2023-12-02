@@ -34,12 +34,12 @@ public class FuncCall : ICuteLexNode
     {
         var ret = new List<AsmInst>();
         var fnBeingCalled = ft.FindFunctionInNameSpace(NameSpace, FunctionNameBeingCalled.Data.Str);
-        var callableName = CuteCCompiler.NameSpace.Combine(NameSpace, FunctionNameBeingCalled.Data.Str);
+
         ret.Add(new AsmInst(
             new(
                 TinyAsmTokenizer.Token.TokenType.CALL,
                 TinyAsmTokenizer.Token.ArgumentType.STR,
-                TinyAsmTokenizer.Token.ArgumentType.NONE, callableName, "")));
+                TinyAsmTokenizer.Token.ArgumentType.NONE, fnBeingCalled.CallableName, "")));
         return ret;
     }
 }

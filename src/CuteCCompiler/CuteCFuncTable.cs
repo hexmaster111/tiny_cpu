@@ -7,7 +7,11 @@ public class CuteCFuncTable
 
     public FuncDef FindFunctionInNameSpace(string ns, string funcName)
     {
-        return FuncDictionary[ns][funcName];
+        var inNs = FuncDictionary.ContainsKey(ns);
+        var inGlobal = FuncDictionary["."].ContainsKey(funcName);
+        if (!inNs && !inGlobal) throw new Exception($"Func not found {funcName} ");
+        if (inNs) return FuncDictionary[ns][funcName];
+        else return FuncDictionary["."][funcName];
     }
 
     public CuteCFuncTable(ProgramRoot rootToken)
