@@ -21,7 +21,7 @@ public class VarAsi : ICuteLexNode
     public string NameSpace { get; set; }
     public string GetOneLineInfo() => $"{VarBeingAssignedTo.Data.Str} = {((ICuteLexNode)this).Expression}";
 
-    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt)
+    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
     {
         throw new NotImplementedException();
     }

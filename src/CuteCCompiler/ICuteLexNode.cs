@@ -14,5 +14,5 @@ public interface ICuteLexNode
     public string ProvidedNameSpace { get; }
     public string NameSpace { get; set; }
     string GetOneLineInfo();
-    List<AsmInst> ExpelInstructions(CuteCVariableTable vt);
+    List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft);
 }

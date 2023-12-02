@@ -48,7 +48,8 @@ public class FuncDef : ICuteLexNode
     public string GetOneLineInfo() =>
         $"fn {FuncName.Data.Str} ({ArgType.Data.Str} {LocalVarName.Data.Str}) => {Return.Data.Str}";
 
-    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt)
+
+    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
     {
         var ret = new List<AsmInst>
         {
@@ -63,7 +64,7 @@ public class FuncDef : ICuteLexNode
 
         foreach (var childNode in Children)
         {
-            ret.AddRange(childNode.ExpelInstructions(vt));
+            ret.AddRange(childNode.ExpelInstructions(vt, ft));
         }
 
         ret.Add(new AsmInst(new TinyAsmTokenizer.Token(TinyAsmTokenizer.Token.TokenType.RET)));

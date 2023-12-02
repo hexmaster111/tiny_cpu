@@ -20,7 +20,8 @@ public class VarDef : ICuteLexNode
     public string GetOneLineInfo() =>
         $"{VariableName.Data.Str} : {VariableType.Data.Str} = {((ICuteLexNode)this).Expression}";
 
-    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt)
+
+    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
     {
         var exp = ((ICuteLexNode)this).Expression;
         if (exp.GetType() == typeof(ConstantExpression))
@@ -46,7 +47,6 @@ public class VarDef : ICuteLexNode
         }
 
 
-      
         if (exp.GetType() == typeof(VarDef))
         {
             throw new NotImplementedException();
@@ -62,14 +62,14 @@ public class VarDef : ICuteLexNode
                     TinyAsmTokenizer.Token.ArgumentType.REGISTER,
                     TinyAsmTokenizer.Token.ArgumentType.NONE,
                     TinyCCallConventions.ScratchRegister0.ToString())
-                ));
-            ret.Add(new (new TinyAsmTokenizer.Token(
-                 TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
-                 TinyAsmTokenizer.Token.ArgumentType.REGISTER,
-                 TinyAsmTokenizer.Token.ArgumentType.CONST,
-                 vt.GetVariableNumber(VariableName, NameSpace)
-                )));
-            
+            ));
+            ret.Add(new(new TinyAsmTokenizer.Token(
+                TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
+                TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                TinyAsmTokenizer.Token.ArgumentType.CONST,
+                vt.GetVariableNumber(VariableName, NameSpace)
+            )));
+
             return ret;
         }
 
@@ -81,7 +81,7 @@ public class VarDef : ICuteLexNode
     }
 
     public string NameSpace { get; set; }
-    public string VariableFullName => NameSpace + VariableName.Data.Str;
+    public string VariableFullName => CuteCCompiler.NameSpace.Combine(NameSpace, VariableName.Data.Str);
 
     public List<CuteToke> ExpressionData { get; }
     public List<CuteToke> ChildData { get; } = new();

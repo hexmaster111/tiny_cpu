@@ -56,7 +56,7 @@ public static class CuteCLexer
 
         foreach (var child in current.Children)
         {
-            child.NameSpace = NameSpace.Combine(current.NameSpace, child.ProvidedNameSpace);
+            child.NameSpace = current.ProvidedNameSpace;
             Lex(child, new TokenStream(child.ChildData.ToArray()));
         }
     }

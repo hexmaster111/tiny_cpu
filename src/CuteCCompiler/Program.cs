@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using TinyAssemblerLib;
 
 namespace CuteCCompiler;
 
@@ -9,20 +8,12 @@ internal class Program
     {
         var input =
             """
-            //var table
-            // global::a - 0x00
             int globalVarA = 42;
-
-
-            //global::fn_main::c - 0x01
-            fn main (  ) : void
-            {
-                int lv_demo = globalVarA;
+            fn main():void {
+                int lv_demo=globalVarA;
             }
-
-            fn other_func():void{int c=0;}
-
-            main();
+            fn other_func ( ) : void { int x=0; }
+            main ();
             """;
 
 
@@ -31,105 +22,35 @@ internal class Program
         var rootToken = new ProgramRoot(tokens);
         CuteCLexer.Lex(rootToken);
         var varTable = CuteCVariableTable.MakeTable(rootToken);
-        var asm = CuteCAsmToken.FromTree(varTable, rootToken);
-        var finalOutput = CuteCAsmToken.FromTokens(asm);
-
+        var funcTable = new CuteCFuncTable(rootToken);
+        var asm = CuteCAsmToken.FromTree(varTable, funcTable, rootToken);
+        var finalOutput = CuteCAsmToken.ConvertToAsm(asm);
         CuteCVisualisation.DrawCompileSteps(input, words, tokens, rootToken, varTable, asm, finalOutput);
         Debugger.Break();
     }
 }
 
-public class AsmInst
+public class CuteCFuncTable
 {
-    public TinyAsmTokenizer.Token AssemblyToken { get; }
-
-    public AsmInst(TinyAsmTokenizer.Token asmToken)
+    // (namespace)  (function names in namespace) (function def) 
+    private Dictionary<string, Dictionary<string, FuncDef>> _funcDictionary = new();
+    public FuncDef FindFunctionInNameSpace(string ns, string funcName)
     {
-        //TODO: Add location info for debugger
-
-        AssemblyToken = asmToken;
+        return _funcDictionary[ns][funcName];
     }
 
-    public string GetFileText() =>
-     $"{AssemblyToken.Type} {AssemblyToken.ArgumentZeroData} {AssemblyToken.ArgumentOneData}";
-}
-
-public class CuteCAsmToken
-{
-    public ICuteLexNode Node { get; }
-    public List<AsmInst> Instructions { get; }
-
-    public CuteCAsmToken(ICuteLexNode node, CuteCVariableTable vt)
+    public CuteCFuncTable(ProgramRoot rootToken)
     {
-        Node = node;
-        Instructions = Node.ExpelInstructions(vt);
-    }
-
-    public static CuteCAsmToken[] FromTree(CuteCVariableTable variableTable, ProgramRoot programRoot)
-    {
-        var ret = new List<CuteCAsmToken>();
-        UnwrapTree(programRoot, variableTable, ret);
-        return ret.ToArray();
-    }
-
-    private static void UnwrapTree(ICuteLexNode c, CuteCVariableTable variableTable, List<CuteCAsmToken> currPrg)
-    {
-        currPrg.Add(new CuteCAsmToken(c, variableTable));
-        foreach (var child in c.Children)
+        var fns = rootToken.FindFuncDefs();
+        foreach (var fn in fns)
         {
-            UnwrapTree(child, variableTable, currPrg);
+            if (!_funcDictionary.ContainsKey(fn.NameSpace))
+                _funcDictionary.Add(fn.NameSpace, new Dictionary<string, FuncDef>());
+
+            if (!_funcDictionary[fn.NameSpace].ContainsKey(fn.FuncName.Data.Str))
+                _funcDictionary[fn.NameSpace].Add(fn.FuncName.Data.Str, fn);
+
+            _funcDictionary[fn.NameSpace][fn.FuncName.Data.Str] = fn;
         }
-    }
-
-    public static List<AsmInst> FromTokens(CuteCAsmToken[] asm)
-    {
-        var all = asm.Select(x => x.Instructions);
-        var ret = new List<AsmInst>();
-        foreach (var some in all)
-        {
-            ret.AddRange(some);
-        }
-
-        return ret;
-    }
-}
-
-public class CuteCVariableTable
-{
-    public Dictionary<string, int> VarTable { get; } = new();
-
-    private int _varIdCounter = 0;
-
-    public void AddVariable(string name)
-    {
-        if (VarTable.ContainsKey(name)) throw new Exception($"Var {name} was all ready defined");
-        VarTable.Add(name, _varIdCounter++);
-    }
-
-    public static CuteCVariableTable MakeTable(ProgramRoot rootToken)
-    {
-        var ret = new CuteCVariableTable();
-
-        var vars = rootToken.FindVarDefs();
-        foreach (var varDef in vars)
-        {
-            var s = varDef.VariableFullName;
-            ret.AddVariable(s);
-        }
-
-        return ret;
-    }
-
-    private CuteCVariableTable()
-    {
-    }
-
-    public string GetVariableNumber(CuteToke variableName, string ns)
-    {
-        var fullName = ns + variableName.Data.Str;
-
-        if (!VarTable.TryGetValue(fullName, out int id)) throw new Exception("Variable Not found");
-
-        return id.ToString();
     }
 }

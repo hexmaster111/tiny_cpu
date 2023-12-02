@@ -1,3 +1,5 @@
+using TinyAssemblerLib;
+
 namespace CuteCCompiler;
 
 public class FuncCall : ICuteLexNode
@@ -24,14 +26,20 @@ public class FuncCall : ICuteLexNode
     public CuteLexNodeKind Kind => CuteLexNodeKind.FuncCall;
     public List<ICuteLexNode> Children { get; set; } = new();
     public List<CuteToke> ChildData { get; } = new();
-    public string? ProvidedNameSpace => null;
+    public string ProvidedNameSpace => ""; //dose not provide a namespace
     public string NameSpace { get; set; }
     public string GetOneLineInfo() => $"{FunctionNameBeingCalled.Data.Str} ({Argument.Data.Str})";
 
-    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt)
+    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
     {
-        return new();
-        //TODO
-        throw new NotImplementedException();
+        var ret = new List<AsmInst>();
+        var fnBeingCalled = ft.FindFunctionInNameSpace(NameSpace, FunctionNameBeingCalled.Data.Str);
+        var callableName = CuteCCompiler.NameSpace.Combine(NameSpace, FunctionNameBeingCalled.Data.Str);
+        ret.Add(new AsmInst(
+            new(
+                TinyAsmTokenizer.Token.TokenType.CALL,
+                TinyAsmTokenizer.Token.ArgumentType.STR,
+                TinyAsmTokenizer.Token.ArgumentType.NONE, callableName, "")));
+        return ret;
     }
 }

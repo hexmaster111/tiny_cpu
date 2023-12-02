@@ -8,16 +8,25 @@ public class ProgramRoot : ICuteLexNode
     public List<CuteToke> ExpressionData { get; } = new();
     public CuteLexNodeKind Kind { get; } = CuteLexNodeKind.ProgramRoot;
     public List<ICuteLexNode> Children { get; set; } = new();
-    public string ProvidedNameSpace => throw new InvalidOperationException();
+    public string ProvidedNameSpace => ".";
     public string NameSpace { get; set; }
     public string GetOneLineInfo() => " Everything in the program";
-    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt) => new();
+
+    public List<AsmInst> ExpelInstructions(CuteCVariableTable vt, CuteCFuncTable ft)
+        => new();
 
     public List<VarDef> FindVarDefs()
     {
         var ret = new List<ICuteLexNode>();
         Find(this, ret, CuteLexNodeKind.VarDefinition);
         return ret.Cast<VarDef>().ToList();
+    }
+
+    public List<FuncDef> FindFuncDefs()
+    {
+        var ret = new List<ICuteLexNode>();
+        Find(this, ret, CuteLexNodeKind.FuncDefinition);
+        return ret.Cast<FuncDef>().ToList();
     }
 
     private void Find(ICuteLexNode current, List<ICuteLexNode> list, CuteLexNodeKind kindToFind)
