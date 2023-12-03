@@ -181,3 +181,61 @@ fn other_func():void{int c=0;}
 main();
 """;
 ```
+
+```
+VT:
+x : 0
+y : 1
+
+int x = 0;  // SETREG GP_I32_0 0
+            // MEM_WRITE GP_I32_0, 0x00
+
+
+int y = 1;  // SETREG GP_I32_0 0x01
+            // MEM_WRITE GP_I32_0, 0x01
+
+if ( 
+    x > y  // COMP X Y 
+           // JMP_GTR if_0_t
+           // JMP if_0_f 
+    ) 
+{
+    // lbl if_0_t
+    int xGy = 1; 
+}
+// lbl if_0_f
+```
+
+
+```
+VT:
+x : 0
+y : 1
+z : 2
+m : 3
+
+int x = 0;  // SETREG GP_I32_0 0
+            // MEM_WRITE GP_I32_0, 0x00
+
+
+int y = 1;  // SETREG GP_I32_0 0x01
+            // MEM_WRITE GP_I32_0, 0x01
+
+int z = 2;
+int m = 3;
+
+if ( 
+    x > y  // COMP X Y 
+           // JMP_LESS if_0_f -- condition false bail
+           
+     &&
+           
+     z == m // COMP Z M
+            // JMP_NEQ 
+    ) 
+{
+    // lbl if_0_t
+    int xGy = 1; 
+}
+// lbl if_0_f
+```
