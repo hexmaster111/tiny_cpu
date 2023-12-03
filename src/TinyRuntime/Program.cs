@@ -54,19 +54,31 @@ public static class TinyRuntime
         RuntimeMain(tinyCpu, singleStep);
     }
 
-    public static void RuntimeMain(TinyCpu tinyCpu, bool singleStep)
+    public static void RuntimeMain(TinyCpu tinyCpu, bool singleStep, Action<TinyCpu>? dumpState = null)
     {
         while (!tinyCpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT))
         {
-            Console.WriteLine(TinyCpuVisualisation.DumpState(tinyCpu));
+            if (dumpState == null)
+            {
+                var s = TinyCpuVisualisation.DumpState(tinyCpu);
+                Console.Clear();
+                Console.WriteLine(s);
+            }
+            else dumpState(tinyCpu);
+
             if (singleStep)
             {
                 WriteWithColoredShortcutKey("STEP", 'S', ConsoleColor.Green);
+                WriteWithColoredShortcutKey(" CONTINUE", 'C', ConsoleColor.Green);
+                Console.WriteLine();
                 var key = Console.ReadKey();
                 switch (key.Key)
                 {
                     case ConsoleKey.S:
                         tinyCpu.Step();
+                        break;
+                    case ConsoleKey.C:
+                        singleStep = false;
                         break;
                 }
             }

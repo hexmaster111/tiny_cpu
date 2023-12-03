@@ -83,6 +83,30 @@ public class VarDef : ICuteLexNode
         }
 
 
+        if (exp.GetType() == typeof(NothingExpression))
+        {
+            var destVarSlot = vt.GetVariableNumber(VariableName, NameSpace);
+            var ret = new List<AsmInst>
+            {
+                new(new TinyAsmTokenizer.Token(
+                    TinyAsmTokenizer.Token.TokenType.SETREG,
+                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.CONST,
+                    TinyCCallConventions.ScratchRegister0.ToString(),
+                    Expression.CreateAsmStringValue("0")
+                )),
+                new(new TinyAsmTokenizer.Token(
+                    TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
+                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.CONST,
+                    TinyCCallConventions.ScratchRegister0.ToString(),
+                    Expression.CreateAsmStringValue(destVarSlot)
+                ))
+            };
+
+            return ret;
+        }
+
         // ret.Add(new AsmInst( new TinyAsmTokenizer.Token()));
 
 

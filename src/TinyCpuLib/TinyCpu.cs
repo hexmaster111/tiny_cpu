@@ -17,10 +17,10 @@ public class TinyCpu
     ///     Runtime hondered cycle time
     /// </summary>
     public int CycleTimeHz { get; set; } = 1;
-
+    
     private int ReadInstructionIntAbs(int index) => BitConverter.ToInt32(TCpuExe, index);
     private byte ReadInstructionByteAbs(int index) => TCpuExe[index];
-    internal byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
+    public byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
     private int ReadInstructionIntRel(int ipOffset) => ReadInstructionIntAbs(Reg.INST_PTR + ipOffset);
 
     private RegisterIndex ReadInstructionRegisterIndexByteRel(int ipOffset) =>
@@ -28,6 +28,7 @@ public class TinyCpu
 
     public void Step()
     {
+        Cycles++;
         //first byte of the current instruction
         var currInst = (OpCode)ReadInstructionByteRel(0);
 
@@ -230,7 +231,6 @@ public class TinyCpu
         }
 
         Reg.Data[(int)RegisterIndex.INST_PTR] += currInst.GetInstructionByteCount();
-        Cycles++;
     }
 
     private bool JmpRegInternal(OpCode currInst, RegisterIndex readInstructionByteRel) =>
@@ -308,7 +308,6 @@ public class TinyCpu
         Reg.Data[(int)RegisterIndex.INST_PTR] = callAdress;
     }
 
-   
 
     public void LoadProgram(byte[] bytes) => TCpuExe = bytes;
 }

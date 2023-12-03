@@ -52,6 +52,18 @@ public static class CAsmAssembler
         return hecFile;
     }
 
+    public static (TinyAsmAssembler, HecFile) AssembleFromTokensToTable(ImmutableArray<TinyAsmTokenizer.Token> tokens)
+    {
+        
+        var asm = new TinyAsmAssembler(tokens);
+        var codeSectionBytes = asm.Assemble();
+        var hecFile = HecFile.New(codeSectionBytes);
+        VerifyAssembly(codeSectionBytes, hecFile, asm);
+
+        return (asm, hecFile);
+    }
+
+
     public static void WriteAsmToFile(string outputPath, HecFile hecFile)
     {
         //write the file data to the output file

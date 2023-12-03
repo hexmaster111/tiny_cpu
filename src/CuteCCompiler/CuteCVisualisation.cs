@@ -55,7 +55,7 @@ public static class CuteCVisualisation
         return sb.ToString();
     }
 
-    private static TreeNode GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
+    public static TreeNode GetStatementTable(CuteCAsmToken[] cuteCAsmTokens)
     {
         var ret = new TreeNode(new Markup("ASM"));
         var n1 = ret.AddNode("TokenInfo");
@@ -72,7 +72,7 @@ public static class CuteCVisualisation
         return ret;
     }
 
-    private static Table GetFuncTableGraphic(CuteCFuncTable ft)
+    public static Table GetFuncTableGraphic(CuteCFuncTable ft)
     {
         var ret = new Table();
 
@@ -90,7 +90,7 @@ public static class CuteCVisualisation
     }
 
 
-    private static Table GetVarTableGraphic(CuteCVariableTable variableTable)
+    public static Table GetVarTableGraphic(CuteCVariableTable variableTable)
     {
         var ret = new Table();
         ret.AddColumns("Fullname", "Var Slot");
