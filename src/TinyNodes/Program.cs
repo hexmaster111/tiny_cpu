@@ -80,7 +80,8 @@ internal static class TinyCpuUi
         if (RunCpu)
         {
             if (!_runTimer.Evaluate(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond)) return;
-            if (!cpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT)) cpu.Step();
+            if (!cpu.Reg.FLAGS_0_HALT) cpu.Step();
+            else RunCpu = false;
         }
     }
 
@@ -107,6 +108,7 @@ internal static class TinyCpuUi
 
         var cpuCycleTimeHz = cpu.CycleTimeHz;
         ImGui.InputInt("##CycleTimeHz", ref cpuCycleTimeHz);
+        if(cpuCycleTimeHz == 0) cpuCycleTimeHz = 1;
         if (cpu.CycleTimeHz != cpuCycleTimeHz) _runTimer = new SimpleTimer(1000 / cpuCycleTimeHz);
         cpu.CycleTimeHz = cpuCycleTimeHz;
         ImGui.NextColumn();

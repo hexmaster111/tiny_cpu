@@ -145,7 +145,7 @@ internal class Program
 
 
         var cpuRegisterTable = new Table().AddColumns("REGISTER", "DEC", "HEX");
-        for (int i = 0; i < (int)RegisterIndex.__REGISTER__COUNT__; i++)
+        for (int i = 0; i < (int)RegisterIndex.GP_I32_2 + 1; i++)
         {
             var reg = (RegisterIndex)i;
             var val = cpu.Reg[reg];

@@ -56,7 +56,7 @@ REGISTER TABLE
 | LOCATION | Register Name | Use                                    |
 |---------:|---------------|----------------------------------------|
 |       00 | INST_PTR      | PTR TO NEXT INSTRUCTION TO BE EXECUTED |
-|       01 | FLAGS_0       | SEE FLAGS_0 USAGE TABLE                |
+|       01 | FLAGS_0       | SEE FLAGS_0 USAGE TABLE                |    
 |       02 | RESERVED      | RESERVED                               |
 |       03 | RESERVED      | RESERVED                               |
 |       04 | GP_I32_0      | GENERAL USE                            |

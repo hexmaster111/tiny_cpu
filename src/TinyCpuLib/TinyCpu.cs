@@ -17,7 +17,7 @@ public class TinyCpu
     ///     Runtime hondered cycle time
     /// </summary>
     public int CycleTimeHz { get; set; } = 1;
-    
+
     private int ReadInstructionIntAbs(int index) => BitConverter.ToInt32(TCpuExe, index);
     private byte ReadInstructionByteAbs(int index) => TCpuExe[index];
     public byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
@@ -44,8 +44,8 @@ public class TinyCpu
             }
                 break;
             case OpCode.HALT:
-                Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.HALT, true);
-                break;
+                Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.HALT, true); 
+                return;
             case OpCode.SETREG_R_R:
             {
                 var dest = ReadInstructionByteRel(1); // reg index
@@ -487,6 +487,13 @@ public readonly struct CpuRegisters
     public readonly int[] Data;
     public int INST_PTR => Data[(int)RegisterIndex.INST_PTR];
     public int FLAGS_0 => Data[(int)RegisterIndex.FLAGS_0];
+    public bool FLAGS_0_HALT => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT);
+    public bool FLAGS_0_EQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ);
+    public bool FLAGS_0_NEQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ);
+    public bool FLAGS_0_GTR => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GTR);
+    public bool FLAGS_0_GEQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GEQ);
+    public bool FLAGS_0_LES => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LES);
+    public bool FLAGS_0_LEQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ);
 
     public int RESERVED_0 => Data[(int)RegisterIndex.RESERVED_0];
     public int RESERVED_1 => Data[(int)RegisterIndex.RESERVED_1];
