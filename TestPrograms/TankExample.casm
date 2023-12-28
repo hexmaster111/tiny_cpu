@@ -1,0 +1,40 @@
+; INST_PTR FLAGS_0 RESERVED RESERVED GP_I32_0 GP_I32_1 GP_I32_2 GP_I32_3 NOOP SETREG ADD SUB DIV MUL LBL CALL HALT RET PUSH POP INC DEC CMP JMP_EQ JMP_NEQ JMP_GTR JMP_GEQ JMP_LES JMP_LEQ JMP MEM_READ MEM_WRITE
+
+
+;; IN  HHigh - MEM 0
+;; IN  LLow - MEM 1
+;; OUT FillFast - Mem 8
+
+
+
+; IN  HIGH - MEM 2
+; IN  LOW  - MEM 3
+; OUT FILL - Mem 9
+
+
+LBL MAIN_LOOP           ; main loop for the application
+MEM_READ GP_I32_0 0x03  ; read INPUT LOW INTO GP_I32_0
+CMP GP_I32_0 0x00       ; comapre input low and the const 0x00
+
+;if the low switch is off, we need to fill
+;if the high switch is on, stop fill
+
+JMP_EQ START_FILL       ; Low fs was off, out of water, start fill.
+
+MEM_READ GP_I32_0 0x02  ; read high fs into GP_I32_0
+CMP GP_I32_0 0x01       ; compare to on
+JMP_EQ STOP_FILL        ; high level fs is on, stop fill
+JMP MAIN_LOOP
+
+
+LBL START_FILL
+SETREG GP_I32_2 0x01       ; Load a 1 into a reg
+MEM_WRITE GP_I32_2 0x09 ; open the fill valve
+JMP MAIN_LOOP
+
+LBL STOP_FILL 
+SETREG GP_I32_2 0x00       ; Load a 0 into a reg
+MEM_WRITE GP_I32_2 0x09 ; shut the fill valve
+JMP MAIN_LOOP
+
+

@@ -460,6 +460,8 @@ public enum RegisterIndex
     GP_I32_0 = 4,
     GP_I32_1 = 5,
     GP_I32_2 = 6,
+    GP_I32_3 = 7,
+
 }
 
 public readonly struct VirtualMemory : IMemory

@@ -26,14 +26,22 @@ internal static class Program
         var cpu = new TinyCpu();
         byte[] program =
         {
-/*00:*/ 0xA6, // [CALL_D] LBL START 
-/*01:*/ 0x0B, 0x04, // [INC] INC GP_I32_0 
-/*03:*/ 0x0D, 0x04, 0xFE, 0x00, 0x00, 0x00, // [CMP_R_C] CMP GP_I32_0 FE
-/*09:*/ 0xA9, 0x13, 0x00, 0x00, 0x00, // [JMP_C_GTR] JMP_GTR DONE 
-/*0e:*/ 0xB4, 0x00, 0x00, 0x00, 0x00, // [JMP_C] JMP START 
-/*13:*/ 0xA6, // [CALL_D] LBL DONE 
-/*14:*/ 0x0B, 0x05, // [INC] INC GP_I32_1 
-/*16:*/ 0xFF, // [HALT] HALT 
+/*00:*/ 0xA6, // [CALL_D] LBL MAIN_LOOP 
+/*01:*/ 0xB5, 0x04, 0x03, 0x00, 0x00, 0x00, // [MEM_READ_R_C] MEM_READ GP_I32_0 3
+/*07:*/ 0x0D, 0x04, 0x00, 0x00, 0x00, 0x00, // [CMP_R_C] CMP GP_I32_0 0
+/*0d:*/ 0xA7, 0x28, 0x00, 0x00, 0x00, // [JMP_C_EQ] JMP_EQ START_FILL 
+/*12:*/ 0xB5, 0x04, 0x02, 0x00, 0x00, 0x00, // [MEM_READ_R_C] MEM_READ GP_I32_0 2
+/*18:*/ 0x0D, 0x04, 0x01, 0x00, 0x00, 0x00, // [CMP_R_C] CMP GP_I32_0 1
+/*1e:*/ 0xA7, 0x3A, 0x00, 0x00, 0x00, // [JMP_C_EQ] JMP_EQ STOP_FILL 
+/*23:*/ 0xB4, 0x00, 0x00, 0x00, 0x00, // [JMP_C] JMP MAIN_LOOP 
+/*28:*/ 0xA6, // [CALL_D] LBL START_FILL 
+/*29:*/ 0x01, 0x06, 0x01, 0x00, 0x00, 0x00, // [SETREG_R_C] SETREG GP_I32_2 1
+/*2f:*/ 0xB7, 0x06, 0x09, 0x00, 0x00, 0x00, // [MEM_WRITE_R_C] MEM_WRITE GP_I32_2 9
+/*35:*/ 0xB4, 0x00, 0x00, 0x00, 0x00, // [JMP_C] JMP MAIN_LOOP 
+/*3a:*/ 0xA6, // [CALL_D] LBL STOP_FILL 
+/*3b:*/ 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, // [SETREG_R_C] SETREG GP_I32_2 0
+/*41:*/ 0xB7, 0x06, 0x09, 0x00, 0x00, 0x00, // [MEM_WRITE_R_C] MEM_WRITE GP_I32_2 9
+/*47:*/ 0xB4, 0x00, 0x00, 0x00, 0x00, // [JMP_C] JMP MAIN_LOOP 
         };
         cpu.LoadProgram(program);
         var decomp = new TinyAsmDecompiler().Decompile(program);
@@ -44,9 +52,21 @@ internal static class Program
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.BLACK);
             rlImGui.Begin();
-            // Ui.Render();
-            TinyCpuUi.Render(cpu, decomp);
 
+            //Set Font Size
+            //Funny fontsize hack fond here for fontsize issues:
+            //https://github.com/ocornut/imgui/issues/1018
+            var oldSize = ImGui.GetFont().Scale;
+            ImGui.GetFont().Scale *= 2f;
+            ImGui.PushFont(ImGui.GetFont());
+
+            TinyCpuUi.Render(cpu, decomp);
+            // Ui.Render();
+
+            ImGui.GetFont().Scale = oldSize;
+            ImGui.PopFont();
+
+            ImGui.End();
             rlImGui.End();
             Raylib.EndDrawing();
         }
@@ -60,21 +80,30 @@ internal static class TinyCpuUi
     public static bool RunCpu = false;
     private static SimpleTimer _runTimer = new(1000);
 
+    private static bool _drawRegistersWindow = true;
+    private static bool _drawMemoryWindow = true;
+    private static bool _drawDumpWindow = false;
+    private static bool _drawDecompWindow = true;
+    private static bool _drawReferenceWindow = false;
+    private static bool _drawControlMenu = true;
+
+
     public static void Render(TinyCpu cpu, List<DecompToken> decomp)
     {
         ImGui.DockSpaceOverViewport();
-        DrawRegistersWindow(cpu);
-        DrawMemoryWindow(cpu);
-        DrawDumpWindow(cpu);
-        DrawCpuControlWindow(cpu);
-        DrawDecompWindow(decomp, cpu.Reg.INST_PTR);
+        DrawMainMenuBar();
+        if (_drawRegistersWindow) DrawRegistersWindow(cpu);
+        if (_drawMemoryWindow) DrawMemoryWindow(cpu);
+        if (_drawDumpWindow) DrawDumpWindow(cpu);
+        if (_drawDecompWindow) DrawDecompWindow(decomp, cpu.Reg.INST_PTR);
+        if (_drawControlMenu) DrawCpuControlWindow(cpu);
+
 
         var highlightOpcode = OpCode.NOOP;
         if (cpu.Reg.INST_PTR >= 0 && cpu.Reg.INST_PTR < cpu.TCpuExe.Length)
             highlightOpcode = (OpCode)cpu.TCpuExe[cpu.Reg.INST_PTR];
-        DrawReferenceWindow(highlightOpcode);
+        if (_drawReferenceWindow) DrawReferenceWindow(highlightOpcode);
 
-        ImGui.ShowDemoWindow();
         ImGui.End();
 
         if (RunCpu)
@@ -85,9 +114,33 @@ internal static class TinyCpuUi
         }
     }
 
+    private static void DrawMainMenuBar()
+    {
+        if (ImGui.BeginMainMenuBar())
+        {
+            if (ImGui.BeginMenu("File"))
+            {
+                if (ImGui.MenuItem("Exit")) Raylib.CloseWindow();
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("View"))
+            {
+                ImGui.MenuItem("Registers", "", ref _drawRegistersWindow);
+                ImGui.MenuItem("Memory", "", ref _drawMemoryWindow);
+                ImGui.MenuItem("Dump", "", ref _drawDumpWindow);
+                ImGui.MenuItem("Decomp", "", ref _drawDecompWindow);
+                ImGui.MenuItem("Reference", "", ref _drawReferenceWindow);
+                ImGui.MenuItem("Control", "", ref _drawControlMenu);
+
+                ImGui.EndMenu();
+            }
+        }
+    }
+
     private static void DrawCpuControlWindow(TinyCpu cpu)
     {
-        ImGui.Begin("TinyCpu -- Control");
+        ImGui.Begin("TinyCpu -- Control", ref _drawControlMenu);
 
         if (ImGui.Button("STEP"))
         {
@@ -108,7 +161,7 @@ internal static class TinyCpuUi
 
         var cpuCycleTimeHz = cpu.CycleTimeHz;
         ImGui.InputInt("##CycleTimeHz", ref cpuCycleTimeHz);
-        if(cpuCycleTimeHz == 0) cpuCycleTimeHz = 1;
+        if (cpuCycleTimeHz == 0) cpuCycleTimeHz = 10;
         if (cpu.CycleTimeHz != cpuCycleTimeHz) _runTimer = new SimpleTimer(1000 / cpuCycleTimeHz);
         cpu.CycleTimeHz = cpuCycleTimeHz;
         ImGui.NextColumn();
@@ -202,22 +255,17 @@ internal static class TinyCpuUi
 
     private static void DrawDecompWindow(List<DecompToken> decomp, int instPtr)
     {
-        ImGui.Begin("TinyCpu -- Decomp");
-        ImGui.Columns(6);
+        ImGui.Begin("TinyCpu -- Decomp", ref _drawDecompWindow);
+        ImGui.Columns(4);
         ImGui.Text("Address");
         ImGui.NextColumn();
         ImGui.Text("OpCode");
         ImGui.NextColumn();
         ImGui.Text("Arg0");
         ImGui.NextColumn();
-        ImGui.Text("Arg0 Type");
-        ImGui.NextColumn();
         ImGui.Text("Arg1");
         ImGui.NextColumn();
-        ImGui.Text("Arg1 Type");
-        ImGui.Separator();
 
-        ImGui.NextColumn();
         foreach (var dt in decomp)
         {
             if (instPtr == dt.address) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1, 0, 0, 1));
@@ -227,11 +275,7 @@ internal static class TinyCpuUi
             ImGui.NextColumn();
             ImGui.Text(dt.sarg0);
             ImGui.NextColumn();
-            ImGui.Text(dt.argZeroType.ToString());
-            ImGui.NextColumn();
             ImGui.Text(dt.sarg1);
-            ImGui.NextColumn();
-            ImGui.Text(dt.argOneType.ToString());
             ImGui.NextColumn();
             if (instPtr == dt.address) ImGui.PopStyleColor();
         }
@@ -261,7 +305,7 @@ internal static class TinyCpuUi
 
     private static void DrawRegistersWindow(TinyCpu cpu)
     {
-        if (ImGui.Begin("TinyCpu - Registers"))
+        if (ImGui.Begin("TinyCpu - Registers", ref _drawRegistersWindow))
         {
             // draw a table of registers 
             // | Register | Value (DEC)| Value (HEX) |
@@ -300,7 +344,7 @@ internal static class TinyCpuUi
 
     private static void DrawMemoryWindow(TinyCpu cpu)
     {
-        if (ImGui.Begin("TinyCpu - Memory"))
+        if (ImGui.Begin("TinyCpu - Memory", ref _drawMemoryWindow))
         {
             // draw a table of memory
             // | Address | Value (DEC)| Value (HEX) |
@@ -318,7 +362,7 @@ internal static class TinyCpuUi
             for (var i = 0; i < cpu.Memory.MemorySize; i++)
             {
                 var memValTmp = cpu.Memory[i];
-                var memName = i.ToString("X8");
+                var memName = i.ToString("X4");
                 ImGui.Text(memName);
                 ImGui.NextColumn();
                 ImGui.InputInt($"##{memName}", ref memValTmp);

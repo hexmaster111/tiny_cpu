@@ -1,0 +1,30 @@
+
+; MEMORY 0 - TARGET VALUE
+; MEMORY 5 - OUTPUT VALUE
+LBL MAIN_LOOP
+
+;read the target value 
+;from memory into a register
+MEM_READ GP_I32_1 0x5
+
+;read the current value into
+; a register from memory
+MEM_READ GP_I32_0 0x0
+
+CMP GP_I32_0 GP_I32_1 ;Comapre the two numbers
+JMP_GTR LARGER
+JMP_LES SMALLER
+JMP MAIN_LOOP ; number eq, recheck for change
+ 
+LBL LARGER ;target value was larger, 
+ADD GP_I32_1 1; add 1 (will change to var)
+JMP UPDATE_OUTPUT
+
+LBL SMALLER ;target value was smaller
+SUB GP_I32_1 1; remove 1 (will change to var)
+JMP UPDATE_OUTPUT
+
+; updates MEM 5 to GP I32 1
+LBL UPDATE_OUTPUT
+MEM_WRITE  GP_I32_1 5 ; Write out
+JMP MAIN_LOOP
