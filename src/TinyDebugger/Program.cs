@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
+using Decomp;
 using Spectre.Console;
 using TinyCpuLib;
 using TinyExt;
@@ -152,7 +153,7 @@ Table GetRegisterValueTable(CpuRegisters registers)
     registerTable.AddColumn("Register");
     registerTable.AddColumn("Value");
 
-    for (var i = 0; i < (int)RegisterIndex.__REGISTER__COUNT__; i++)
+    for (var i = 0; i < (int)RegisterIndex.GP_I32_2 + 1; i++)
     {
         var reg = (RegisterIndex)i;
         var regStr = Enum.GetName(reg)!;
@@ -241,5 +242,3 @@ List<DecompToken> Decompile(byte[] texe)
     return ret;
 }
 
-record DecompToken(OpCode opCode, Token.ArgumentType argZeroType, Token.ArgumentType argOneType,
-    ImmutableArray<byte> data, byte[] arg0, byte[] arg1, string sarg0, string sarg1, int address);

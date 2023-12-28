@@ -122,6 +122,7 @@ FLAGS_0 USAGE TABLE
 |      B6 | MEM_READ_R_R  | [DST] REGISTER       | [SRC] REGISTER       | READS FROM mem@regval -> register    | x      |
 |      B7 | MEM_WRITE_R_C | [SRC] REGISTER [val] | [DST] CONSTANT [adr] | WRITES FROM register -> memAddress   | x      |
 |      B8 | MEM_WRITE_R_R | [SRC] REGISTER       | [DST] REGISTER       | WRITES FROM register -> mem@regval   | x      |
+|         |               |                      |                      |                                      |        |
 |      FF | HALT          |                      |                      |                                      | x      |
 
 ```asm

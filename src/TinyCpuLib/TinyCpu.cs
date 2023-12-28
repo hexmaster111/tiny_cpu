@@ -460,7 +460,6 @@ public enum RegisterIndex
     GP_I32_0 = 4,
     GP_I32_1 = 5,
     GP_I32_2 = 6,
-    __REGISTER__COUNT__,
 }
 
 public readonly struct VirtualMemory : IMemory
@@ -468,6 +467,7 @@ public readonly struct VirtualMemory : IMemory
     public readonly int[] GeneralUse;
 
     public VirtualMemory() => GeneralUse = new int[16];
+    public int MemorySize { get; } = 16;
 
     public int Read(int address) => GeneralUse[address];
     public void Write(int address, int value) => GeneralUse[address] = value;
@@ -483,7 +483,7 @@ public readonly struct VirtualMemory : IMemory
 
 public readonly struct CpuRegisters
 {
-    public CpuRegisters() => Data = new int[(int)RegisterIndex.__REGISTER__COUNT__];
+    public CpuRegisters() => Data = new int[Enum.GetValues(typeof(RegisterIndex)).Length];
     public readonly int[] Data;
     public int INST_PTR => Data[(int)RegisterIndex.INST_PTR];
     public int FLAGS_0 => Data[(int)RegisterIndex.FLAGS_0];
