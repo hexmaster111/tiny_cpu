@@ -190,45 +190,45 @@ internal static partial class TinyCpuUi
     private static string GetOpCodeDescription(OpCode opCode) => opCode switch
     {
         OpCode.NOOP => "TODO: My Desc",
-        OpCode.SETREG_R_C => "TODO: My Desc",
-        OpCode.SETREG_R_R => "TODO: My Desc",
-        OpCode.ADD_R_C => "TODO: My Desc",
-        OpCode.ADD_R_R => "TODO: My Desc",
-        OpCode.MUL_R_C => "TODO: My Desc",
-        OpCode.MUL_R_R => "TODO: My Desc",
-        OpCode.SUB_R_C => "TODO: My Desc",
-        OpCode.SUB_R_R => "TODO: My Desc",
-        OpCode.DIV_R_C => "TODO: My Desc",
-        OpCode.DIV_R_R => "TODO: My Desc",
-        OpCode.INC => "TODO: My Desc",
-        OpCode.DEC => "TODO: My Desc",
-        OpCode.CMP_R_C => "TODO: My Desc",
-        OpCode.CMP_R_R => "TODO: My Desc",
-        OpCode.PUSH_C => "TODO: My Desc",
-        OpCode.PUSH_R => "TODO: My Desc",
-        OpCode.POP_R => "TODO: My Desc",
-        OpCode.CALL_C => "TODO: My Desc",
-        OpCode.CALL_R => "TODO: My Desc",
+        OpCode.SETREG_INTR_INTC => "TODO: My Desc",
+        OpCode.SETREG_INTR_INTR => "TODO: My Desc",
+        OpCode.ADD_INTR_INTC => "TODO: My Desc",
+        OpCode.ADD_INTR_INTR => "TODO: My Desc",
+        OpCode.MUL_INTR_INTC => "TODO: My Desc",
+        OpCode.MUL_INTR_INTR => "TODO: My Desc",
+        OpCode.SUB_INTR_INTC => "TODO: My Desc",
+        OpCode.SUB_INTR_INTR => "TODO: My Desc",
+        OpCode.DIV_INTR_INTC => "TODO: My Desc",
+        OpCode.DIV_INTR_INTR => "TODO: My Desc",
+        OpCode.INC_INTR => "TODO: My Desc",
+        OpCode.DEC_INTR => "TODO: My Desc",
+        OpCode.CMP_INTR_INTC => "TODO: My Desc",
+        OpCode.CMP_INTR_INTR => "TODO: My Desc",
+        OpCode.PUSH_INTC => "TODO: My Desc",
+        OpCode.PUSH_INTR => "TODO: My Desc",
+        OpCode.POP_INTR => "TODO: My Desc",
+        OpCode.CALL_INTC => "TODO: My Desc",
+        OpCode.CALL_INTR => "TODO: My Desc",
         OpCode.RET => "TODO: My Desc",
-        OpCode.CALL_D => "TODO: My Desc",
-        OpCode.JMP_C_EQ => "TODO: My Desc",
-        OpCode.JMP_C_NEQ => "TODO: My Desc",
-        OpCode.JMP_C_GTR => "TODO: My Desc",
-        OpCode.JMP_C_GEQ => "TODO: My Desc",
-        OpCode.JMP_C_LES => "TODO: My Desc",
-        OpCode.JMP_C_LEQ => "TODO: My Desc",
-        OpCode.JMP_R_EQ => "TODO: My Desc",
-        OpCode.JMP_R_NEQ => "TODO: My Desc",
-        OpCode.JMP_R_GTR => "TODO: My Desc",
-        OpCode.JMP_R_GEQ => "TODO: My Desc",
-        OpCode.JMP_R_LES => "TODO: My Desc",
-        OpCode.JMP_R_LEQ => "TODO: My Desc",
-        OpCode.JMP_R => "TODO: My Desc",
-        OpCode.JMP_C => "TODO: My Desc",
-        OpCode.MEM_READ_R_C => "TODO: My Desc",
-        OpCode.MEM_READ_R_R => "TODO: My Desc",
-        OpCode.MEM_WRITE_R_C => "TODO: My Desc",
-        OpCode.MEM_WRITE_R_R => "TODO: My Desc",
+        OpCode.CALLD => "TODO: My Desc",
+        OpCode.JMP_INTC_EQ => "TODO: My Desc",
+        OpCode.JMP_INTC_NEQ => "TODO: My Desc",
+        OpCode.JMP_INTC_GTR => "TODO: My Desc",
+        OpCode.JMP_INTC_GEQ => "TODO: My Desc",
+        OpCode.JMP_INTC_LES => "TODO: My Desc",
+        OpCode.JMP_INTC_LEQ => "TODO: My Desc",
+        OpCode.JMP_INTR_EQ => "TODO: My Desc",
+        OpCode.JMP_INTR_NEQ => "TODO: My Desc",
+        OpCode.JMP_INTR_GTR => "TODO: My Desc",
+        OpCode.JMP_INTR_GEQ => "TODO: My Desc",
+        OpCode.JMP_INTR_LES => "TODO: My Desc",
+        OpCode.JMP_INTR_LEQ => "TODO: My Desc",
+        OpCode.JMP_INTR => "TODO: My Desc",
+        OpCode.JMP_INTC => "TODO: My Desc",
+        OpCode.MEM_READ_INTR_INTC => "TODO: My Desc",
+        OpCode.MEM_READ_INTR_INTR => "TODO: My Desc",
+        OpCode.MEM_WRITE_INTR_INTC => "TODO: My Desc",
+        OpCode.MEM_WRITE_INTR_INTR => "TODO: My Desc",
         OpCode.HALT => "TODO: My Desc",
         _ => "Im new exciting and undocumented!"
     };
@@ -289,40 +289,40 @@ internal static partial class TinyCpuUi
         if (ImGui.Begin("TinyCpu - Registers", ref _drawRegistersWindow))
         {
             // draw a table of registers 
-            // | Register | Value (DEC)| Value (HEX) |
+            // | Register | Value (DEC_INTR)| Value (HEX) |
             // |----------|------------|-------------|
             // | GP_I32_0 | 0          | 0x00000000  |
 
             ImGui.Columns(3);
             ImGui.Text("Register");
             ImGui.NextColumn();
-            ImGui.Text("Value (DEC)");
+            ImGui.Text("Value (DEC_INTR)");
             ImGui.NextColumn();
             ImGui.Text("Value (HEX)");
             ImGui.Separator();
             ImGui.NextColumn();
 
-            var enumNames = Enum.GetNames(typeof(RegisterIndex));
+            var enumNames = Enum.GetNames(typeof(IntRegisterIndex));
 
-            for (var i = 0; i < cpu.Reg.Data.Length; i++)
+            for (var i = 0; i < cpu.Reg.Int.Length; i++)
             {
-                ref var regVal = ref cpu.Reg.Data[i];
+                ref var regVal = ref cpu.Reg.Int[i];
                 var regName = enumNames[i];
-                var emu = (RegisterIndex)i;
+                var emu = (IntRegisterIndex)i;
                 ImGui.Text(regName);
                 ImGui.NextColumn();
                 ImGui.InputInt($"##{regName}", ref regVal);
                 ImGui.NextColumn();
                 ImGui.Text(regVal.ToString("X2"));
                 ImGui.NextColumn();
-                if (emu == RegisterIndex.FLAGS_0)
+                if (emu == IntRegisterIndex.FLAGS_0)
                 {
                     ImGui.Columns(4);
                     foreach (var flags0Usage in Enum.GetValues<FLAGS_0_USAGE>())
                     {
                         var v = cpu.Reg.FLAGS_0.ReadBit(flags0Usage);
                         ImGui.Checkbox($"{flags0Usage}##{regName}Hex", ref v);
-                        cpu.Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit(flags0Usage, v);
+                        cpu.Reg.Int[(int)IntRegisterIndex.FLAGS_0].WriteBit(flags0Usage, v);
                         ImGui.NextColumn();
                     }
 
@@ -342,13 +342,13 @@ internal static partial class TinyCpuUi
         if (ImGui.Begin("TinyCpu - Memory", ref _drawMemoryWindow))
         {
             // draw a table of memory
-            // | Address | Value (DEC)| Value (HEX) |
+            // | Address | Value (DEC_INTR)| Value (HEX) |
             // |----------|------------|-------------|
             // | 0x00000000 | 0          | 0x00000000  |
             ImGui.Columns(3);
             ImGui.Text("Address");
             ImGui.NextColumn();
-            ImGui.Text("Value (DEC)");
+            ImGui.Text("Value (DEC_INTR)");
             ImGui.NextColumn();
             ImGui.Text("Value (HEX)");
             ImGui.Separator();

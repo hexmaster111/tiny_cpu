@@ -74,7 +74,7 @@ public class TinyAsmTokenizer
                 Token ReadHaltToken(string[] strings) => new(TokenType.HALT);
 
                 ArgumentType GetTokenType(string token,
-                    out RegisterIndex? registerIndex,
+                    out IntRegisterIndex? registerIndex,
                     out int? constantOut,
                     out string? strOut)
                 {
@@ -88,7 +88,7 @@ public class TinyAsmTokenizer
                         return ArgumentType.CONST;
                     }
 
-                    if (Enum.TryParse<RegisterIndex>(token, out var ourRegIndex))
+                    if (Enum.TryParse<IntRegisterIndex>(token, out var ourRegIndex))
                     {
                         registerIndex = ourRegIndex;
                         return ArgumentType.REGISTER;
@@ -129,7 +129,7 @@ public class TinyAsmTokenizer
 
 
                                 void SetVars(ref ArgumentType argumentTypeRef, ref string argDataRef,
-                                    RegisterIndex? ri,
+                                    IntRegisterIndex? ri,
                                     int? co,
                                     string? s, ArgumentType argumentType)
                                 {

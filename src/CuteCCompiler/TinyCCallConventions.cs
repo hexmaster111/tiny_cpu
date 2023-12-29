@@ -2,7 +2,7 @@ using TinyCpuLib;
 
 namespace CuteCCompiler;
 
-public static class TinyCCallConventions
+internal static class TinyCCallConventions
 {
-    public const RegisterIndex ScratchRegister0 = RegisterIndex.GP_I32_0;
+    internal const IntRegisterIndex ScratchRegister0 = IntRegisterIndex.GP_I32_0;
 }

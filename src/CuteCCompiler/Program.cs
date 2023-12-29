@@ -144,17 +144,17 @@ internal class Program
         }
 
 
-        var cpuRegisterTable = new Table().AddColumns("REGISTER", "DEC", "HEX");
-        for (int i = 0; i < (int)RegisterIndex.GP_I32_2 + 1; i++)
+        var cpuRegisterTable = new Table().AddColumns("REGISTER", "DEC_INTR", "HEX");
+        
+        foreach (var reg in Enum.GetValues<IntRegisterIndex>())
         {
-            var reg = (RegisterIndex)i;
             var val = cpu.Reg[reg];
             cpuRegisterTable.AddRow(
                 new Text(reg.ToString()),
                 new Text(val.ToString()),
                 new Text(val.ToString("X4")));
         }
-
+        
 
         var fnTable = new Table();
         fnTable.AddColumns("NAMESPACE", "FN NAME");

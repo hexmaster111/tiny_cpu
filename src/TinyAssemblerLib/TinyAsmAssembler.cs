@@ -38,48 +38,48 @@ public class TinyAsmAssembler
             switch (t.Token.Type)
             {
                 case TinyAsmTokenizer.Token.TokenType.JMP_EQ:
-                    FixJmp(t, OpCode.JMP_C_EQ, OpCode.JMP_R_EQ);
+                    FixJmp(t, OpCode.JMP_INTC_EQ, OpCode.JMP_INTR_EQ);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.JMP_NEQ:
-                    FixJmp(t, OpCode.JMP_C_NEQ, OpCode.JMP_R_NEQ);
+                    FixJmp(t, OpCode.JMP_INTC_NEQ, OpCode.JMP_INTR_NEQ);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.JMP_GTR:
-                    FixJmp(t, OpCode.JMP_C_GTR, OpCode.JMP_R_GTR);
+                    FixJmp(t, OpCode.JMP_INTC_GTR, OpCode.JMP_INTR_GTR);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.JMP_GEQ:
-                    FixJmp(t, OpCode.JMP_C_GEQ, OpCode.JMP_R_GEQ);
+                    FixJmp(t, OpCode.JMP_INTC_GEQ, OpCode.JMP_INTR_GEQ);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.JMP_LES:
-                    FixJmp(t, OpCode.JMP_C_LES, OpCode.JMP_R_LES);
+                    FixJmp(t, OpCode.JMP_INTC_LES, OpCode.JMP_INTR_LES);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.JMP_LEQ:
-                    FixJmp(t, OpCode.JMP_C_LEQ, OpCode.JMP_R_LEQ);
+                    FixJmp(t, OpCode.JMP_INTC_LEQ, OpCode.JMP_INTR_LEQ);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.JMP:
-                    FixJmp(t, OpCode.JMP_C, OpCode.JMP_R);
+                    FixJmp(t, OpCode.JMP_INTC, OpCode.JMP_INTR);
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.ADD:
-                    FixMathInst(t, OpCode.ADD_R_C, OpCode.ADD_R_R);
+                    FixMathInst(t, OpCode.ADD_INTR_INTC, OpCode.ADD_INTR_INTR);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.SUB:
-                    FixMathInst(t, OpCode.SUB_R_C, OpCode.SUB_R_R);
+                    FixMathInst(t, OpCode.SUB_INTR_INTC, OpCode.SUB_INTR_INTR);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.DIV:
-                    FixMathInst(t, OpCode.DIV_R_C, OpCode.DIV_R_R);
+                    FixMathInst(t, OpCode.DIV_INTR_INTC, OpCode.DIV_INTR_INTR);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.MUL:
-                    FixMathInst(t, OpCode.MUL_R_C, OpCode.MUL_R_R);
+                    FixMathInst(t, OpCode.MUL_INTR_INTC, OpCode.MUL_INTR_INTR);
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.INC:
-                    FixSingleRegOnly(t, OpCode.INC);
+                    FixSingleRegOnly(t, OpCode.INC_INTR);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.DEC:
-                    FixSingleRegOnly(t, OpCode.DEC);
+                    FixSingleRegOnly(t, OpCode.DEC_INTR);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.POP:
-                    FixSingleRegOnly(t, OpCode.POP_R);
+                    FixSingleRegOnly(t, OpCode.POP_INTR);
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.PUSH:
@@ -87,13 +87,13 @@ public class TinyAsmAssembler
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.SETREG:
-                    Fix_RR_RC(t, OpCode.SETREG_R_R, OpCode.SETREG_R_C);
+                    Fix_RR_RC(t, OpCode.SETREG_INTR_INTR, OpCode.SETREG_INTR_INTC);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.CMP:
-                    Fix_RR_RC(t, OpCode.CMP_R_R, OpCode.CMP_R_C);
+                    Fix_RR_RC(t, OpCode.CMP_INTR_INTR, OpCode.CMP_INTR_INTC);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.CALL:
-                    FixCall(t, OpCode.CALL_C, OpCode.CALL_R); //CALL R?!
+                    FixCall(t, OpCode.CALL_INTC, OpCode.CALL_INTR); //CALL R?!
                     break;
                 case TinyAsmTokenizer.Token.TokenType.HALT:
                 case TinyAsmTokenizer.Token.TokenType.LBL:
@@ -102,10 +102,10 @@ public class TinyAsmAssembler
                     t.Freeze();
                     break;
                 case TinyAsmTokenizer.Token.TokenType.MEM_READ:
-                    Fix_RR_RC(t, OpCode.MEM_READ_R_R, OpCode.MEM_READ_R_C);
+                    Fix_RR_RC(t, OpCode.MEM_READ_INTR_INTR, OpCode.MEM_READ_INTR_INTC);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.MEM_WRITE:
-                    Fix_RR_RC(t, OpCode.MEM_WRITE_R_R, OpCode.MEM_WRITE_R_C);
+                    Fix_RR_RC(t, OpCode.MEM_WRITE_INTR_INTR, OpCode.MEM_WRITE_INTR_INTC);
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.NONE:
@@ -139,8 +139,8 @@ public class TinyAsmAssembler
 
         var opcode = token0Type switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)OpCode.PUSH_C,
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)OpCode.PUSH_R,
+            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)OpCode.PUSH_INTC,
+            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)OpCode.PUSH_INTR,
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -241,7 +241,7 @@ public class TinyAsmAssembler
         {
             var data = asmToken.GetData();
             data[0] = (byte)registerOpCode;
-            var regIndex = Enum.Parse<RegisterIndex>(asmToken.Token.ArgumentZeroData);
+            var regIndex = Enum.Parse<IntRegisterIndex>(asmToken.Token.ArgumentZeroData);
             data[1] = (byte)regIndex;
         }
         else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.STR)
@@ -324,7 +324,7 @@ public class TinyAsmAssembler
         asmToken.Freeze();
     }
 
-    private byte GetRegisterByteConst(string argData) => (byte)Enum.Parse<RegisterIndex>(argData);
+    private byte GetRegisterByteConst(string argData) => (byte)Enum.Parse<IntRegisterIndex>(argData);
 
     public int GetInstAddress(AsmToken lbl)
     {
@@ -374,7 +374,7 @@ public class AsmToken : IFreezable
     public static AsmToken New(TinyAsmTokenizer.Token token) => token.Type switch
     {
         TinyAsmTokenizer.Token.TokenType.NOOP => new AsmToken(token, new[] { (byte)OpCode.NOOP }),
-        TinyAsmTokenizer.Token.TokenType.LBL => new AsmToken(token, new[] { (byte)OpCode.CALL_D }),
+        TinyAsmTokenizer.Token.TokenType.LBL => new AsmToken(token, new[] { (byte)OpCode.CALLD }),
         TinyAsmTokenizer.Token.TokenType.HALT => new AsmToken(token, new[] { (byte)OpCode.HALT }),
         TinyAsmTokenizer.Token.TokenType.RET => new AsmToken(token, new[] { (byte)OpCode.RET }),
         TinyAsmTokenizer.Token.TokenType.NONE => throw new ArgumentOutOfRangeException(),
