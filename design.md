@@ -95,9 +95,10 @@ FLAGS_0 USAGE TABLE
 |      0D | CMP_R_C       | [DST] REGISTER A     | [SRC] CONST    B     | A>B     A<B    A==B                  | x      |
 |      0E | CMP_R_R       | [DST] REGISTER A     | [SRC] REGISTER B     | A>B     A<B    A==B                  | x      |
 |      0F |               |                      |                      | RESERVED                             |        |
-|      A0 | PUSH C        | [SRC] CONSTANT VALUE |                      | pushes the value into stack          | x      |
-|      A1 | PUSH R        | [SRC] REGISTER       |                      | pushes the value into stack          | x      |
-|      A2 | POP R         | [DST] REGISTER       |                      | pops the current value into register | x      |
+|      A0 | PUSH_C        | [SRC] CONSTANT VALUE |                      | pushes the value into stack          | x      |
+|      A0 | PUSH_C        | [SRC] CONSTANT VALUE |                      | pushes the value into stack          | x      |
+|      A1 | PUSH_R        | [SRC] REGISTER       |                      | pushes the value into stack          | x      |
+|      A2 | POP_R         | [DST] REGISTER       |                      | pops the current value into register | x      |
 |      A3 | CALL          | [SRC] CONSTANT VALUE |                      | calls the constants offset in memory | x      |
 |      A4 | CALL          | [SRC] ADDR IN REG    |                      | calls the constants offset in memory | x      |
 |      A5 | RET           |                      |                      |                                      | x      |
@@ -185,4 +186,3 @@ If i just put the code at the end of the metadata, i can never grow the metadata
 /*15:*/ 0xFF, // [HALT] HALT  
 END OF FILE
 ```
-

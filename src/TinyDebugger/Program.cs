@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+#define FONT_SIZE_HACK
 using Decomp;
 using ImGuiNET;
 using Raylib_cs;
@@ -50,6 +51,7 @@ internal static class Program
             Raylib.ClearBackground(Color.BLACK);
             rlImGui.Begin();
 
+#if FONT_SIZE_HACK
             //Set Font Size
             //Funny fontsize hack fond here for fontsize issues:
             //https://github.com/ocornut/imgui/issues/1018
@@ -57,12 +59,12 @@ internal static class Program
             ImGui.GetFont().Scale *= 2f;
             ImGui.PushFont(ImGui.GetFont());
 
+#endif
             TinyCpuUi.Render(cpu, decomp);
-            // Ui.Render();
-
+#if FONT_SIZE_HACK
             ImGui.GetFont().Scale = oldSize;
             ImGui.PopFont();
-
+#endif
             ImGui.End();
             rlImGui.End();
             Raylib.EndDrawing();

@@ -42,7 +42,7 @@ internal static partial class TinyCpuUi
         if (RunCpu)
         {
             if (!_runTimer.Evaluate(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond)) return;
-            if (!cpu.Reg.FLAGS_0_HALT) cpu.Step();
+            if (!cpu.Reg.FLAGS_0.ReadBit(FLAGS_0_USAGE.HALT)) cpu.Step();
             else RunCpu = false;
         }
     }
@@ -308,12 +308,26 @@ internal static partial class TinyCpuUi
             {
                 ref var regVal = ref cpu.Reg.Data[i];
                 var regName = enumNames[i];
+                var emu = (RegisterIndex)i;
                 ImGui.Text(regName);
                 ImGui.NextColumn();
                 ImGui.InputInt($"##{regName}", ref regVal);
                 ImGui.NextColumn();
-                ImGui.Text(regVal.ToString("X8"));
+                ImGui.Text(regVal.ToString("X2"));
                 ImGui.NextColumn();
+                if (emu == RegisterIndex.FLAGS_0)
+                {
+                    ImGui.Columns(4);
+                    foreach (var flags0Usage in Enum.GetValues<FLAGS_0_USAGE>())
+                    {
+                        var v = cpu.Reg.FLAGS_0.ReadBit(flags0Usage);
+                        ImGui.Checkbox($"{flags0Usage}##{regName}Hex", ref v);
+                        cpu.Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit(flags0Usage, v);
+                        ImGui.NextColumn();
+                    }
+
+                    ImGui.Columns(3);
+                }
             }
 
             ImGui.Columns(1);

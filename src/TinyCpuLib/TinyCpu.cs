@@ -44,7 +44,7 @@ public class TinyCpu
             }
                 break;
             case OpCode.HALT:
-                Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.HALT, true); 
+                Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.HALT, true);
                 return;
             case OpCode.SETREG_R_R:
             {
@@ -264,12 +264,12 @@ public class TinyCpu
 
     private void CmpInternal(int a, int b)
     {
-        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.EQ, a == b);
-        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.NEQ, a != b);
-        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.GTR, a > b);
-        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.GEQ, a >= b);
-        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.LES, a < b);
-        Reg.Data[(int)RegisterIndex.FLAGS_0].SetBit((int)FLAGS_0_USAGE.LEQ, a <= b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.EQ, a == b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.NEQ, a != b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.GTR, a > b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.GEQ, a >= b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.LES, a < b);
+        Reg.Data[(int)RegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.LEQ, a <= b);
     }
 
     private void PushValueStack(int val)
@@ -427,7 +427,10 @@ public static class Ext
     public static bool ReadBit(this int flags, int bitIndex) => (flags & (1 << bitIndex)) != 0;
     public static bool ReadBit(this int flags, FLAGS_0_USAGE flag) => ReadBit(flags, (int)flag);
 
-    public static void SetBit(this ref int flags, int bitIndex, bool newValue)
+    public static void WriteBit(this ref int flags, FLAGS_0_USAGE flag, bool newValue) =>
+        WriteBit(ref flags, (int)flag, newValue);
+
+    public static void WriteBit(this ref int flags, int bitIndex, bool newValue)
     {
         if (newValue)
         {
@@ -461,7 +464,6 @@ public enum RegisterIndex
     GP_I32_1 = 5,
     GP_I32_2 = 6,
     GP_I32_3 = 7,
-
 }
 
 public readonly struct VirtualMemory : IMemory
@@ -489,14 +491,6 @@ public readonly struct CpuRegisters
     public readonly int[] Data;
     public int INST_PTR => Data[(int)RegisterIndex.INST_PTR];
     public int FLAGS_0 => Data[(int)RegisterIndex.FLAGS_0];
-    public bool FLAGS_0_HALT => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT);
-    public bool FLAGS_0_EQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.EQ);
-    public bool FLAGS_0_NEQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.NEQ);
-    public bool FLAGS_0_GTR => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GTR);
-    public bool FLAGS_0_GEQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.GEQ);
-    public bool FLAGS_0_LES => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LES);
-    public bool FLAGS_0_LEQ => FLAGS_0.ReadBit((int)FLAGS_0_USAGE.LEQ);
-
     public int RESERVED_0 => Data[(int)RegisterIndex.RESERVED_0];
     public int RESERVED_1 => Data[(int)RegisterIndex.RESERVED_1];
     public int GP_I32_0 => Data[(int)RegisterIndex.GP_I32_0];
