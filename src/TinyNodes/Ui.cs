@@ -38,6 +38,10 @@ internal static class Ui
         if (!ImGui.Begin("Tools", ref showToolsWindow, ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoTitleBar))
             return;
 
+        if (ImGui.BeginMenuBar())
+        {
+            ImGui.EndMenuBar();
+        }
 
         if (ImGui.TreeNode(OpenDocument.Document.Name + "##" + OpenDocument.Document.GetHashCode()))
         {
@@ -71,7 +75,7 @@ internal static class Ui
                 }
             }
 
-            if(nameSpace.NameSpaces.Count == 0) return;
+            if (nameSpace.NameSpaces.Count == 0) return;
             StyleLabel();
             ImGui.Text("NameSpaces");
             PopLabel();

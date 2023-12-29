@@ -4,7 +4,7 @@ using ImGuiNET;
 using Raylib_cs;
 using TinyCpuLib;
 
-namespace TinyNodes;
+namespace TinyDebugger;
 
 internal static partial class TinyCpuUi
 {

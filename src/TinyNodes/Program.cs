@@ -58,10 +58,7 @@ internal static class Program
             var oldSize = ImGui.GetFont().Scale;
             ImGui.GetFont().Scale *= 2f;
             ImGui.PushFont(ImGui.GetFont());
-
-            TinyCpuUi.Render(cpu, decomp);
-            // Ui.Render();
-
+            Ui.Render();
             ImGui.GetFont().Scale = oldSize;
             ImGui.PopFont();
 
