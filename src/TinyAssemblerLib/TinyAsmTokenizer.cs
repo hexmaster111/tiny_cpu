@@ -91,7 +91,7 @@ public class TinyAsmTokenizer
                     if (Enum.TryParse<IntRegisterIndex>(token, out var ourRegIndex))
                     {
                         registerIndex = ourRegIndex;
-                        return ArgumentType.REGISTER;
+                        return ArgumentType.IntRegister;
                     }
 
                     strOut = token;
@@ -139,7 +139,7 @@ public class TinyAsmTokenizer
                                         case ArgumentType.CONST:
                                             argDataRef = co.Value.ToString("X");
                                             break;
-                                        case ArgumentType.REGISTER:
+                                        case ArgumentType.IntRegister:
                                             argDataRef = ri.Value.ToString();
                                             break;
                                         case ArgumentType.STR:
@@ -206,7 +206,7 @@ public class TinyAsmTokenizer
         }
 
         // @formatter:keep_existing_enum_arrangement true
-        public enum ArgumentType { CONST, REGISTER, STR, NONE }
+        public enum ArgumentType { CONST, IntRegister, STR, NONE }
         // @formatter:keep_existing_enum_arrangement restore
     };
 }

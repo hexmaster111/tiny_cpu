@@ -131,7 +131,7 @@ public class TinyAsmAssembler
         var token0Type = token.Token.ArgumentZeroType;
         var token1Type = token.Token.ArgumentOneType;
 
-        if (token0Type != TinyAsmTokenizer.Token.ArgumentType.REGISTER &&
+        if (token0Type != TinyAsmTokenizer.Token.ArgumentType.IntRegister &&
             token0Type != TinyAsmTokenizer.Token.ArgumentType.CONST)
         {
             throw new Exception($"Arg 0 must be of type reg or const, got {token0Type}");
@@ -140,14 +140,14 @@ public class TinyAsmAssembler
         var opcode = token0Type switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)OpCode.PUSH_INTC,
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)OpCode.PUSH_INTR,
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)OpCode.PUSH_INTR,
             _ => throw new ArgumentOutOfRangeException()
         };
 
         var argZeroBytes = token0Type switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(token.Token.ArgumentZeroData)),
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[]
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[]
                 { GetRegisterByteConst(token.Token.ArgumentZeroData) },
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -170,7 +170,7 @@ public class TinyAsmAssembler
         var token0Type = token.Token.ArgumentZeroType;
         var token1Type = token.Token.ArgumentOneType;
 
-        if (token0Type != TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+        if (token0Type != TinyAsmTokenizer.Token.ArgumentType.IntRegister)
             throw new Exception($"Arg 0 of {token.Token.Type} must be a register");
 
         if (token1Type != TinyAsmTokenizer.Token.ArgumentType.NONE)
@@ -189,10 +189,10 @@ public class TinyAsmAssembler
         var token0Type = token.Token.ArgumentZeroType;
         var token1Type = token.Token.ArgumentOneType;
 
-        if (token0Type is not TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+        if (token0Type is not TinyAsmTokenizer.Token.ArgumentType.IntRegister)
             throw new Exception($"Arg 0 must be of type register, got {token0Type}");
 
-        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.REGISTER &&
+        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.IntRegister &&
             token1Type != TinyAsmTokenizer.Token.ArgumentType.CONST)
             throw new Exception($"Arg 1 must be of type register or constant, got {token1Type}");
 
@@ -200,14 +200,14 @@ public class TinyAsmAssembler
         var token1Data = token1Type switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(token.Token.ArgumentOneData)),
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[] { GetRegisterByteConst(token.Token.ArgumentOneData) },
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[] { GetRegisterByteConst(token.Token.ArgumentOneData) },
             _ => throw new ArgumentOutOfRangeException()
         };
 
         var opCode = token1Type switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)constVerOpCode,
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)registerVerOpCode,
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)registerVerOpCode,
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -237,7 +237,7 @@ public class TinyAsmAssembler
             data[3] = dataBytes[2];
             data[4] = dataBytes[3];
         }
-        else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+        else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.IntRegister)
         {
             var data = asmToken.GetData();
             data[0] = (byte)registerOpCode;
@@ -279,10 +279,10 @@ public class TinyAsmAssembler
 
     private void Fix_RR_RC(AsmToken asmToken, OpCode rr, OpCode rc)
     {
-        if (asmToken.Token.ArgumentZeroType is not TinyAsmTokenizer.Token.ArgumentType.REGISTER)
+        if (asmToken.Token.ArgumentZeroType is not TinyAsmTokenizer.Token.ArgumentType.IntRegister)
         {
             throw new ArgumentException(
-                $"First Arg of {asmToken.Token.Type} must be of type REGISTER, got {asmToken.Token.ArgumentZeroType}:" +
+                $"First Arg of {asmToken.Token.Type} must be of type IntRegister, got {asmToken.Token.ArgumentZeroType}:" +
                 $"\"{asmToken.Token.ArgumentZeroData}\"");
         }
 
@@ -292,7 +292,7 @@ public class TinyAsmAssembler
         var arg1Data = argOneType switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(argOneData)),
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => new[] { GetRegisterByteConst(argOneData) },
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[] { GetRegisterByteConst(argOneData) },
             TinyAsmTokenizer.Token.ArgumentType.STR => throw new Exception(
                 $"String arg not valid with set register for {asmToken}"),
             TinyAsmTokenizer.Token.ArgumentType.NONE => throw new Exception(
@@ -307,7 +307,7 @@ public class TinyAsmAssembler
         data[0] = argOneType switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)rc,
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => (byte)rr,
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)rr,
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -396,7 +396,7 @@ public class AsmToken : IFreezable
         argType switch
         {
             TinyAsmTokenizer.Token.ArgumentType.CONST => 4,
-            TinyAsmTokenizer.Token.ArgumentType.REGISTER => 1,
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => 1,
             TinyAsmTokenizer.Token.ArgumentType.STR => parentToken.Type switch
             {
                 TinyAsmTokenizer.Token.TokenType.LBL => 0, //label just turns into a CALLDST and thats just the opcode

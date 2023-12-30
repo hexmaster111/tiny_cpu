@@ -12,11 +12,17 @@ internal class Program
     {
         _cpu.LoadProgram(new byte[]
         {
-            /*00:*/ 0x01, 0x05, 0x01, 0x00, 0x00, 0x00, // [SETREG_INTR_INTC] SETREG GP_I32_1 1
-            /*06:*/ 0xB7, 0x05, 0x01, 0x00, 0x00, 0x00, // [MEM_WRITE_INTR_INTC] MEM_WRITE GP_I32_1 1
-            /*0c:*/ 0xB8, 0x05, 0x04, // [MEM_WRITE_INTR_INTR] MEM_WRITE GP_I32_1 GP_I32_0
-            /*0f:*/ 0xB5, 0x05, 0x01, 0x00, 0x00, 0x00, // [MEM_READ_INTR_INTC] MEM_READ GP_I32_1 1
-            /*15:*/ 0xFF, // [HALT] HALT  
+            192, 0, // set str reg 0 to
+            32, 72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 0, //END OF STRING
+            193, 1, 0, // set str reg 1 to reg 0
+            194, 1, 0, // concat the two strings
+            196, 1, 0, // Compare the two strings
+            0xC5, 0x01, 72, 101, 108, 108, 111, 0x00, // comp "Hello" to str reg 1
+            192, 0, // set str reg 0 to
+            32, 0, //END OF STRING
+            0xC6, 0x01, 0x01, 0x00, 0x00, 0x00, // STR SPLIT reg 1, take part 1, save to reg 1
+            0xCD, 72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 0x00, // push str "Hello World" to stack
+            255, // [HALT] HALT  
         });
 
         while (!_cpu.Reg.FLAGS_0.ReadBit((int)FLAGS_0_USAGE.HALT))

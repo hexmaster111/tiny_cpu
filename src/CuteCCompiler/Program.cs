@@ -144,7 +144,7 @@ internal class Program
         }
 
 
-        var cpuRegisterTable = new Table().AddColumns("REGISTER", "DEC_INTR", "HEX");
+        var cpuRegisterTable = new Table().AddColumns("IntRegister", "DEC_INTR", "HEX");
         
         foreach (var reg in Enum.GetValues<IntRegisterIndex>())
         {
@@ -169,7 +169,7 @@ internal class Program
 
         var varTbl = new Table();
         varTbl.AddColumns("Var Slot", "Fullname", "Value");
-        var dbgMem = cpu.Memory.Debugger_ReadAllMemoryAddresses();
+        var dbgMem = cpu.Memory.Debugger_ReadAllIntMemoryAddresses();
         foreach (var kvp in vt.VarTable)
         {
             var val = dbgMem[kvp.Value];
@@ -216,7 +216,7 @@ internal class Program
 
 
         var varStackTbl = new Table().AddColumns("Value");
-        foreach (var value in cpu.ValueStack.ToArray())
+        foreach (var value in cpu.IntValueStack.ToArray())
         {
             varStackTbl.AddRow(new Text(value.ToString()));
         }

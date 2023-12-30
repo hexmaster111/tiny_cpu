@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace TinyCpuLib;
 
 // @formatter:place_simple_accessorholder_on_single_line true
@@ -14,7 +16,8 @@ public class TinyCpu
 
     public readonly CpuRegisters Reg = new();
     public readonly Stack<int> CallStack = new();
-    public readonly Stack<int> ValueStack = new();
+    public readonly Stack<int> IntValueStack = new();
+    public readonly Stack<string> StrValueStack = new();
     public UInt128 Cycles { get; private set; } = 0;
 
     /// <summary>
@@ -27,8 +30,11 @@ public class TinyCpu
     public byte ReadInstructionByteRel(int ipOffset) => ReadInstructionByteAbs(Reg.INST_PTR + ipOffset);
     private int ReadInstructionIntRel(int ipOffset) => ReadInstructionIntAbs(Reg.INST_PTR + ipOffset);
 
-    private IntRegisterIndex ReadInstructionRegisterIndexByteRel(int ipOffset) =>
+    private IntRegisterIndex ReadInstIntRegIndexByteRel(int ipOffset) =>
         (IntRegisterIndex)ReadInstructionByteRel(ipOffset);
+
+    private StrRegisterIndex ReadInstStrRegIndexRel(int ipOffset) =>
+        (StrRegisterIndex)ReadInstructionByteRel(ipOffset);
 
     public void Step()
     {
@@ -139,14 +145,14 @@ public class TinyCpu
             }
             case OpCode.PUSH_INTR:
             {
-                var valSrc = ReadInstructionRegisterIndexByteRel(1);
+                var valSrc = ReadInstIntRegIndexByteRel(1);
                 PushValueStack(Reg[valSrc]);
                 break;
             }
             case OpCode.POP_INTR:
             {
                 var destReg = (IntRegisterIndex)ReadInstructionByteRel(1);
-                Reg.Int[(int)destReg] = ValueStack.Pop();
+                Reg.Int[(int)destReg] = IntValueStack.Pop();
                 break;
             }
             case OpCode.INC_INTR:
@@ -203,38 +209,175 @@ public class TinyCpu
 
             case OpCode.MEM_READ_INTR_INTC:
             {
-                var destReg = ReadInstructionRegisterIndexByteRel(1);
+                var destReg = ReadInstIntRegIndexByteRel(1);
                 var memAddress = ReadInstructionIntRel(2);
-                Reg[destReg] = Memory.Read(memAddress);
-            }
+                Reg[destReg] = Memory.ReadInt(memAddress);
                 break;
+            }
             case OpCode.MEM_READ_INTR_INTR:
             {
-                var destReg = ReadInstructionRegisterIndexByteRel(1);
-                var srcReg = ReadInstructionRegisterIndexByteRel(2);
-                Reg[destReg] = Memory.Read(Reg[srcReg]);
-            }
+                var destReg = ReadInstIntRegIndexByteRel(1);
+                var srcReg = ReadInstIntRegIndexByteRel(2);
+                Reg[destReg] = Memory.ReadInt(Reg[srcReg]);
                 break;
+            }
             case OpCode.MEM_WRITE_INTR_INTC:
             {
-                var valReg = ReadInstructionRegisterIndexByteRel(1);
+                var valReg = ReadInstIntRegIndexByteRel(1);
                 var writeAddress = ReadInstructionIntRel(2);
-                Memory.Write(writeAddress, Reg[valReg]);
-            }
+                Memory.WriteInt(writeAddress, Reg[valReg]);
                 break;
+            }
             case OpCode.MEM_WRITE_INTR_INTR:
             {
-                var valReg = ReadInstructionRegisterIndexByteRel(1);
-                var writeRegAddr = ReadInstructionRegisterIndexByteRel(2);
-                Memory.Write(Reg[writeRegAddr], Reg[valReg]);
-            }
+                var valReg = ReadInstIntRegIndexByteRel(1);
+                var writeRegAddr = ReadInstIntRegIndexByteRel(2);
+                Memory.WriteInt(Reg[writeRegAddr], Reg[valReg]);
                 break;
+            }
+
+            case OpCode.SETREG_STRR_STRC:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var str = ReadInstStrRel(2);
+                Reg.Str[(int)destReg] = str;
+                Reg.Int[(int)IntRegisterIndex.INST_PTR] += str.Length + 3;
+                return;
+            }
+            case OpCode.SETREG_STRR_STRR:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var srcReg = ReadInstStrRegIndexRel(2);
+                Reg.Str[(int)destReg] = Reg.Str[(int)srcReg];
+                break;
+            }
+            case OpCode.CCAT_STRR_STRR:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var srcReg = ReadInstStrRegIndexRel(2);
+                Reg.Str[(int)destReg] += Reg.Str[(int)srcReg];
+                break;
+            }
+            case OpCode.CCAT_STRR_STRC:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var srcStr = ReadInstStrRel(2);
+                Reg.Str[(int)destReg] += srcStr;
+                break;
+            }
+            case OpCode.CMP_STRR_STRR:
+            {
+                var regA = Reg.Str[(int)ReadInstStrRegIndexRel(1)];
+                var regB = Reg.Str[(int)ReadInstStrRegIndexRel(2)];
+                StrCmpInternal(regA, regB);
+                break;
+            }
+            case OpCode.CMP_STRR_STRC:
+            {
+                var regA = Reg.Str[(int)ReadInstStrRegIndexRel(1)];
+                var regB = ReadInstStrRel(2);
+                StrCmpInternal(regA, regB);
+                Reg.Int[(int)IntRegisterIndex.INST_PTR] += regB.Length + 3;
+                return;
+            }
+            case OpCode.STRSPLT_STRR_INTC:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var start = ReadInstructionIntRel(2);
+                var str = Reg.Str[(int)destReg];
+                Reg.Str[(int)destReg] = str.Substring(start);
+                break;
+            }
+            case OpCode.STRSPLT_STRR_INTR:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var partWanted = ReadInstructionIntRel(2);
+                var splitChar = Reg.Str[0];
+                var str = Reg.Str[(int)destReg];
+                var parts = str.Split(splitChar);
+                //TODO: cpu should have exception handling
+                if (partWanted >= parts.Length) throw new Exception("Invalid part wanted");
+                Reg.Str[(int)destReg] = parts[partWanted];
+                break;
+            }
+
+            case OpCode.MEM_READ_STRR_INTC:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var memAddress = ReadInstructionIntRel(2);
+                Reg.Str[(int)destReg] = Memory.ReadStr(memAddress);
+                break;
+            }
+            case OpCode.MEM_READ_STRR_INTR:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                var srcReg = ReadInstIntRegIndexByteRel(2);
+                Reg.Str[(int)destReg] = Memory.ReadStr(Reg[srcReg]);
+                break;
+            }
+            case OpCode.MEM_WRITE_STRR_INTC:
+            {
+                var valReg = ReadInstStrRegIndexRel(1);
+                var writeAddress = ReadInstructionIntRel(2);
+                Memory.WriteStr(writeAddress, Reg.Str[(int)valReg]);
+                break;
+            }
+            case OpCode.MEM_WRITE_STRR_INTR:
+            {
+                var valReg = ReadInstStrRegIndexRel(1);
+                var writeRegAddr = ReadInstIntRegIndexByteRel(2);
+                Memory.WriteStr(Reg[writeRegAddr], Reg.Str[(int)valReg]);
+                break;
+            }
+            case OpCode.PUSH_STRR:
+            {
+                var valReg = ReadInstStrRegIndexRel(1);
+                StrValueStack.Push(Reg.Str[(int)valReg]);
+                break;
+            }
+            case OpCode.PUSH_STRC:
+            {
+                var str = ReadInstStrRel(1);
+                StrValueStack.Push(str);
+                Reg.Int[(int)IntRegisterIndex.INST_PTR] += str.Length + 2;
+                return;
+            }
+            case OpCode.POP_STRR:
+            {
+                var destReg = ReadInstStrRegIndexRel(1);
+                Reg.Str[(int)destReg] = StrValueStack.Pop();
+                break;
+            }
 
             default:
                 throw new Exception($"Unknown OPCODE: {currInst}");
         }
 
         Reg.Int[(int)IntRegisterIndex.INST_PTR] += currInst.GetInstructionByteCount();
+    }
+
+    private void StrCmpInternal(string a, string b)
+    {
+        CmpInternal(a.Length, b.Length);
+
+        Reg.Int[(int)IntRegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.EQ, a.SequenceEqual(b));
+        Reg.Int[(int)IntRegisterIndex.FLAGS_0].WriteBit((int)FLAGS_0_USAGE.NEQ,
+            !Reg.Int[(int)IntRegisterIndex.FLAGS_0].ReadBit((int)FLAGS_0_USAGE.EQ));
+    }
+
+    private string ReadInstStrRel(int ipOffset) => ReadInstructionStrAbs(ipOffset + Reg.INST_PTR);
+
+    private string ReadInstructionStrAbs(int startAddr)
+    {
+        var str = "";
+        for (var i = startAddr; i < TCpuExe.Length; i++)
+        {
+            var currChar = TCpuExe[i];
+            if (currChar == 0x00) break;
+            str += (char)currChar;
+        }
+
+        return str;
     }
 
     private bool JmpRegInternal(OpCode currInst, IntRegisterIndex readInstructionByteRel) =>
@@ -278,8 +421,8 @@ public class TinyCpu
 
     private void PushValueStack(int val)
     {
-        ValueStack.Push(val);
-        if (ValueStack.Count > MAX_STACK) throw new Exception("Value Stack Smashed!");
+        IntValueStack.Push(val);
+        if (IntValueStack.Count > MAX_STACK) throw new Exception("Value Stack Smashed!");
     }
 
 
@@ -362,8 +505,24 @@ public enum OpCode : byte
     MEM_READ_INTR_INTR = 0xB6,
     MEM_WRITE_INTR_INTC = 0xB7,
     MEM_WRITE_INTR_INTR = 0xB8,
-    
-    
+
+
+    SETREG_STRR_STRC = 0xC0,
+    SETREG_STRR_STRR = 0xC1,
+    CCAT_STRR_STRR = 0xC2,
+    CCAT_STRR_STRC = 0xC3,
+    CMP_STRR_STRR = 0xC4,
+    CMP_STRR_STRC = 0xC5,
+    STRSPLT_STRR_INTC = 0xC6,
+    STRSPLT_STRR_INTR = 0xC7,
+    MEM_READ_STRR_INTC = 0xC8,
+    MEM_READ_STRR_INTR = 0xC9,
+    MEM_WRITE_STRR_INTC = 0xCA,
+    MEM_WRITE_STRR_INTR = 0xCB,
+    PUSH_STRR = 0xCC,
+    PUSH_STRC = 0xCD,
+    POP_STRR = 0xCE,
+
 
     HALT = 0xFF,
 }
@@ -391,7 +550,7 @@ public enum IntRegisterIndex
     GP_I32_3 = 7,
 }
 
-public enum StringRegisterIndex
+public enum StrRegisterIndex
 {
     GP_STR_0 = 0,
     GP_STR_1 = 1,
@@ -410,15 +569,22 @@ public readonly struct CpuRegisters
     public CpuRegisters()
     {
         Int = new int[Enum.GetValues(typeof(IntRegisterIndex)).Length];
-        Str = new string[Enum.GetValues(typeof(StringRegisterIndex)).Length];
+        Str = new string[Enum.GetValues(typeof(StrRegisterIndex)).Length];
+        for (var i = 0; i < Str.Length; i++) Str[i] = "";
     }
 
-    public int this[IntRegisterIndex key] { get => GetRegisterValue(key); set => SetRegisterValue(key, value); }
+    public int this[IntRegisterIndex key] { get => GetIntRegisterValue(key); set => SetIntRegisterValue(key, value); }
 
-    public void SetRegisterValue(IntRegisterIndex intRegister, int value) => SetIntRegVal((byte)intRegister, value);
+    public string this[StrRegisterIndex key]
+    {
+        get => GetStrRegisterValue((IntRegisterIndex)key);
+        set => SetStrRegisterValue(key, value);
+    }
 
-    public int GetRegisterValue(IntRegisterIndex intRegister) => GetIntRegisterValue((byte)intRegister);
-
+    private void SetStrRegisterValue(StrRegisterIndex key, string value) => Str[(int)key] = value;
+    private string GetStrRegisterValue(IntRegisterIndex key) => Str[(int)key];
+    public void SetIntRegisterValue(IntRegisterIndex intRegister, int value) => SetIntRegVal((byte)intRegister, value);
+    public int GetIntRegisterValue(IntRegisterIndex intRegister) => GetIntRegisterValue((byte)intRegister);
     private void SetIntRegVal(byte register, int value) => Int[register] = value;
     private int GetIntRegisterValue(byte register) => Int[register];
 

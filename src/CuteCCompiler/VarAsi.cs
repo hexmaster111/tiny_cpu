@@ -42,14 +42,14 @@ public class VarAsi : ICuteLexNode
             var list = new List<AsmInst>();
             list.Add(new(new TinyAsmTokenizer.Token(
                 TinyAsmTokenizer.Token.TokenType.SETREG,
-                TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                TinyAsmTokenizer.Token.ArgumentType.IntRegister,
                 TinyAsmTokenizer.Token.ArgumentType.CONST,
                 TinyCCallConventions.ScratchRegister0.ToString(),
                 e.AsmStringValue)
             ));
             list.Add(new(new TinyAsmTokenizer.Token(
                 TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
-                TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                TinyAsmTokenizer.Token.ArgumentType.IntRegister,
                 TinyAsmTokenizer.Token.ArgumentType.CONST,
                 TinyCCallConventions.ScratchRegister0.ToString(),
                 Expression.CreateAsmStringValue(vt.GetVariableNumber(VarBeingAssignedTo, NameSpace))
@@ -73,14 +73,14 @@ public class VarAsi : ICuteLexNode
             {
                 new(new TinyAsmTokenizer.Token(
                     TinyAsmTokenizer.Token.TokenType.MEM_READ,
-                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.IntRegister,
                     TinyAsmTokenizer.Token.ArgumentType.CONST,
                     TinyCCallConventions.ScratchRegister0.ToString(),
                     Expression.CreateAsmStringValue(srcVarSlot)
                 )),
                 new(new TinyAsmTokenizer.Token(
                     TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
-                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.IntRegister,
                     TinyAsmTokenizer.Token.ArgumentType.CONST,
                     TinyCCallConventions.ScratchRegister0.ToString(),
                     Expression.CreateAsmStringValue(destVarSlot)
@@ -98,14 +98,14 @@ public class VarAsi : ICuteLexNode
             {
                 new(new TinyAsmTokenizer.Token(
                     TinyAsmTokenizer.Token.TokenType.SETREG,
-                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.IntRegister,
                     TinyAsmTokenizer.Token.ArgumentType.CONST,
                     TinyCCallConventions.ScratchRegister0.ToString(),
                     Expression.CreateAsmStringValue("0")
                 )),
                 new(new TinyAsmTokenizer.Token(
                     TinyAsmTokenizer.Token.TokenType.MEM_WRITE,
-                    TinyAsmTokenizer.Token.ArgumentType.REGISTER,
+                    TinyAsmTokenizer.Token.ArgumentType.IntRegister,
                     TinyAsmTokenizer.Token.ArgumentType.CONST,
                     TinyCCallConventions.ScratchRegister0.ToString(),
                     Expression.CreateAsmStringValue(destVarSlot)
