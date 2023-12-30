@@ -200,8 +200,7 @@ public class TinyCpu
                     return; //Modifies Inst Ptr 
                 break;
             case OpCode.JMP_INTR:
-                Reg.Int[(int)IntRegisterIndex.INST_PTR] =
-                    Reg.Int[(int)(IntRegisterIndex)ReadInstructionByteAbs(1)];
+                Reg.Int[(int)IntRegisterIndex.INST_PTR] = Reg.Int[(int)(IntRegisterIndex)ReadInstructionByteAbs(1)];
                 return;
             case OpCode.JMP_INTC:
                 Reg.Int[(int)IntRegisterIndex.INST_PTR] = ReadInstructionIntRel(1);
@@ -295,7 +294,6 @@ public class TinyCpu
                 var splitChar = Reg.Str[0];
                 var str = Reg.Str[(int)destReg];
                 var parts = str.Split(splitChar);
-                //TODO: cpu should have exception handling
                 if (partWanted >= parts.Length) throw new Exception("Invalid part wanted");
                 Reg.Str[(int)destReg] = parts[partWanted];
                 break;

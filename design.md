@@ -182,7 +182,7 @@ FLAGS_0 USAGE TABLE
 |         |                     |                         |                       |                                       |              |
 |      FF | HALT                |                         |                       |                                       |              |
 
-> a string const must end with null, ascii
+> a string const must end with null
 
 ### SAMPLE ASM
 
