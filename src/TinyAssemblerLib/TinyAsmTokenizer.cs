@@ -38,125 +38,205 @@ public class TinyAsmTokenizer
 
         public static Token? FromLine(string line)
         {
-            var commentOut = line.Split(';');
-            var cmdParts = commentOut[0].Split(' ', StringSplitOptions.TrimEntries |
-                                                    StringSplitOptions.RemoveEmptyEntries);
+            line = line.Trim();
+            if (line.StartsWith(';')) return null;
+            var commentSplit = line.Split(';');
+            line = commentSplit[0];
+            List<string> cmdParts = new();
+            SplitLine(line, cmdParts);
+            for (var i = 0; i < cmdParts.Count; i++) cmdParts[i] = cmdParts[i].Trim();
+            return FromParts(cmdParts.ToArray(), line);
+        }
 
-            return FromParts(cmdParts);
-
-            Token? FromParts(string[] parts)
+        private static void SplitLine(string line, List<string> cmdParts)
+        {
+            var inQuotes = false;
+            string currentPart = "";
+            foreach (var c in line)
             {
-                if (!parts.Any()) return null;
-
-                if (!Enum.TryParse(parts[0], true, out TokenType cmd))
+                if (c == '"')
                 {
-                    throw new TokenParseException(line, TokenParseException.Reason.UnableToParseTokenType,
-                        $"\"{parts[0]}\" Invalid Parse ");
+                    if (inQuotes)
+                    {
+                        currentPart += c;
+                        cmdParts.Add(currentPart);
+                        currentPart = "";
+                        continue;
+                    }
+
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ' ' && !inQuotes)
+                {
+                    cmdParts.Add(currentPart);
+                    currentPart = "";
                 }
 
-                if (cmd == TokenType.NONE)
-                    throw new TokenParseException(line, TokenParseException.Reason.UnableToParseTokenType,
-                        "none is not a valid Token");
-                var nextParts = parts[1..];
-                return cmd switch
+                currentPart += c;
+            }
+
+            cmdParts.Add(currentPart);
+        }
+
+        private static Token? FromParts(string[] parts, string line)
+        {
+            if (!parts.Any()) return null;
+
+            if (!Enum.TryParse(parts[0], true, out TokenType cmd))
+            {
+                throw new TokenParseException(line, TokenParseException.Reason.UnableToParseTokenType,
+                    $"\"{parts[0]}\" Invalid Parse ");
+            }
+
+            if (cmd == TokenType.NONE)
+                throw new TokenParseException(line, TokenParseException.Reason.UnableToParseTokenType,
+                    "none is not a valid Token");
+            var nextParts = parts[1..];
+            return cmd switch
+            {
+                TokenType.NOOP => ReadNoopToken(nextParts),
+                TokenType.HALT => ReadHaltToken(nextParts),
+                TokenType.RET => ReadRetToken(nextParts),
+                TokenType.NONE => throw new Exception("Token Parse got a NONE, this is invalid"),
+                _ => ReadToken(nextParts, cmd, nextParts)
+            };
+
+            Token ReadRetToken(string[] strings) => new Token(TokenType.RET);
+
+            Token ReadNoopToken(string[] strings) => new(TokenType.NOOP);
+
+            Token ReadHaltToken(string[] strings) => new(TokenType.HALT);
+        }
+
+        private static Token ReadToken(string[] strings, TokenType type, string[]? nextParts)
+        {
+            var ArgumentZeroType = Token.ArgumentType.NONE;
+            var ArgumentOneType = Token.ArgumentType.NONE;
+            var ArgZeroData = "";
+            var ArgOneData = "";
+
+
+            var expectedParts = type.ExpectedArgumentCount();
+
+            for (int i = 0; i < expectedParts; i++)
+            {
+                var argT = GetTokenType(nextParts[i],
+                    out var registerIndex,
+                    out var constantOut,
+                    out var fnNameOut,
+                    out var strRegisterIndex,
+                    out var strLiteralOut);
+
+                switch (i)
                 {
-                    TokenType.NOOP => ReadNoopToken(nextParts),
-                    TokenType.HALT => ReadHaltToken(nextParts),
-                    TokenType.RET => ReadRetToken(nextParts),
-                    TokenType.NONE => throw new Exception("Token Parse got a NONE, this is invalid"),
-                    _ => ReadToken(nextParts, cmd)
-                };
-
-                Token ReadRetToken(string[] strings) => new Token(TokenType.RET);
-
-                Token ReadNoopToken(string[] strings) => new(TokenType.NOOP);
-
-                Token ReadHaltToken(string[] strings) => new(TokenType.HALT);
-
-                ArgumentType GetTokenType(string token,
-                    out IntRegisterIndex? registerIndex,
-                    out int? constantOut,
-                    out string? strOut)
-                {
-                    registerIndex = null;
-                    constantOut = null;
-                    strOut = null;
-
-                    if (char.IsNumber(token[0]))
-                    {
-                        constantOut = Convert.ToInt32(token, 16);
-                        return ArgumentType.CONST;
-                    }
-
-                    if (Enum.TryParse<IntRegisterIndex>(token, out var ourRegIndex))
-                    {
-                        registerIndex = ourRegIndex;
-                        return ArgumentType.IntRegister;
-                    }
-
-                    strOut = token;
-                    return ArgumentType.STR;
-                }
-
-                Token ReadToken(string[] strings, TokenType type)
-                {
-                    var ArgumentZeroType = Token.ArgumentType.NONE;
-                    var ArgumentOneType = Token.ArgumentType.NONE;
-                    var ArgZeroData = "";
-                    var ArgOneData = "";
-
-
-                    var expectedParts = type.ExpectedArgumentCount();
-
-                    for (int i = 0; i < expectedParts; i++)
-                    {
-                        var argT = GetTokenType(nextParts[i],
-                            out var registerIndex,
-                            out var constantOut,
-                            out var strOut);
-
-                        switch (i)
-                        {
-                            case 0:
-                                SetVars(ref ArgumentZeroType, ref ArgZeroData, registerIndex, constantOut, strOut,
-                                    argT);
-                                break;
-                            case 1:
-                                SetVars(ref ArgumentOneType, ref ArgOneData, registerIndex, constantOut, strOut, argT);
-                                break;
-                            default:
-                                throw new ArgumentException("Too many args!");
-
-
-                                void SetVars(ref ArgumentType argumentTypeRef, ref string argDataRef,
-                                    IntRegisterIndex? ri,
-                                    int? co,
-                                    string? s, ArgumentType argumentType)
-                                {
-                                    argumentTypeRef = argumentType;
-                                    switch (argumentType)
-                                    {
-                                        case ArgumentType.CONST:
-                                            argDataRef = co.Value.ToString("X");
-                                            break;
-                                        case ArgumentType.IntRegister:
-                                            argDataRef = ri.Value.ToString();
-                                            break;
-                                        case ArgumentType.STR:
-                                            argDataRef = s.ToUpper();
-                                            break;
-                                        case ArgumentType.NONE:
-                                        default:
-                                            throw new ArgumentOutOfRangeException(nameof(argumentType), argumentType,
-                                                null);
-                                    }
-                                }
-                        }
-                    }
-
-                    return new Token(type, ArgumentZeroType, ArgumentOneType, ArgZeroData, ArgOneData);
+                    case 0:
+                        SetVars(
+                            ref ArgumentZeroType,
+                            ref ArgZeroData,
+                            registerIndex,
+                            constantOut,
+                            fnNameOut,
+                            strLiteralOut,
+                            strRegisterIndex,
+                            argT);
+                        break;
+                    case 1:
+                        SetVars(
+                            ref ArgumentOneType,
+                            ref ArgOneData,
+                            registerIndex,
+                            constantOut,
+                            fnNameOut,
+                            strLiteralOut,
+                            strRegisterIndex,
+                            argT);
+                        break;
+                    default:
+                        throw new ArgumentException("Too many args!");
                 }
             }
+
+            return new Token(type, ArgumentZeroType, ArgumentOneType, ArgZeroData, ArgOneData);
+        }
+
+        private static void SetVars(
+            ref ArgumentType argumentTypeRef,
+            ref string argDataRef,
+            IntRegisterIndex? ri,
+            int? co,
+            string? fnName,
+            string? strLit,
+            StrRegisterIndex? strRegisterIndex,
+            ArgumentType argumentType
+        )
+        {
+            argumentTypeRef = argumentType;
+            switch (argumentType)
+            {
+                case ArgumentType.ConstInt:
+                    argDataRef = co.Value.ToString("X");
+                    break;
+                case ArgumentType.IntRegister:
+                    argDataRef = ri.Value.ToString();
+                    break;
+                case ArgumentType.FuncName:
+                    argDataRef = fnName.ToUpper();
+                    break;
+                case ArgumentType.StrRegister:
+                    argDataRef = strRegisterIndex.Value.ToString();
+                    break;
+                case ArgumentType.StrLiteral:
+                    argDataRef = strLit;
+                    break;
+
+                case ArgumentType.NONE:
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(argumentType), argumentType,
+                        null);
+            }
+        }
+
+        private static ArgumentType GetTokenType(
+            string token,
+            out IntRegisterIndex? registerIndex,
+            out int? constantOut,
+            out string? fnNameOut,
+            out StrRegisterIndex? strRegisterIndex,
+            out string? strLiteralOut
+        )
+        {
+            registerIndex = null;
+            constantOut = null;
+            fnNameOut = null;
+            strRegisterIndex = null;
+            strLiteralOut = null;
+
+            if (char.IsNumber(token[0]))
+            {
+                constantOut = Convert.ToInt32(token, 16);
+                return ArgumentType.ConstInt;
+            }
+
+            if (Enum.TryParse<IntRegisterIndex>(token, out var ourRegIndex))
+            {
+                registerIndex = ourRegIndex;
+                return ArgumentType.IntRegister;
+            }
+
+            if (Enum.TryParse<StrRegisterIndex>(token, out var strRegIndex))
+            {
+                strRegisterIndex = strRegIndex;
+                return ArgumentType.StrRegister;
+            }
+
+            if (token.StartsWith("\"") && token.EndsWith("\""))
+            {
+                strLiteralOut = token[1..^1];
+                return ArgumentType.StrLiteral;
+            }
+
+            fnNameOut = token;
+            return ArgumentType.FuncName;
         }
 
         public class TokenParseException : Exception
@@ -202,11 +282,19 @@ public class TinyAsmTokenizer
             JMP_LEQ,
             JMP,
             MEM_READ,
-            MEM_WRITE
+            MEM_WRITE,
+            SCCAT,
+            SSPLIT,
         }
 
-        // @formatter:keep_existing_enum_arrangement true
-        public enum ArgumentType { CONST, IntRegister, STR, NONE }
-        // @formatter:keep_existing_enum_arrangement restore
+        public enum ArgumentType
+        {
+            ConstInt,
+            IntRegister,
+            StrRegister,
+            FuncName,
+            StrLiteral,
+            NONE
+        }
     };
 }

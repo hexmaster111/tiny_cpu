@@ -17,7 +17,7 @@ public static class TinyCpuVisualisation
         sb.AppendLine();
         foreach (var reg in Enum.GetValues<StrRegisterIndex>())
         {
-            sb.Append($"{reg}: {cpu.Reg[reg]}");
+            sb.AppendLine($"{reg}: {cpu.Reg[reg]}");
         }
         
         sb.AppendLine();

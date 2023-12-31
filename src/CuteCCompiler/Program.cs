@@ -49,7 +49,7 @@ internal class Program
             {
                 //Call user main
                 new(new TinyAsmTokenizer.Token(TinyAsmTokenizer.Token.TokenType.CALL,
-                    TinyAsmTokenizer.Token.ArgumentType.STR,
+                    TinyAsmTokenizer.Token.ArgumentType.FuncName,
                     TinyAsmTokenizer.Token.ArgumentType.NONE,
                     ".::main")),
 

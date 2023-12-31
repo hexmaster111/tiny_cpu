@@ -28,11 +28,12 @@
 | JMP         | LBL NAME  |          |                                   |
 | MEM_READ    | DEST REG  | int ADDR | Reads from mem addres -> dest reg |
 | MEM_WRITE   | VAL       | int ADDR | Writes val -> address             |
+| SCCAT       | DEST      | SRC      | STRING CONCAT                     |
+| SSPLIT      | DEST      | SRC      | STR REG 0 IS SPLIT CHAR           |
 
-Potental new asm syms
 
 - CONCAT STR_REG STR[REG/CONST]
--
+- SUBSTR STR_REG STR[REG] STR[REG/CONST]
 
 ## VM BYTECODE
 
@@ -76,8 +77,8 @@ S_SUBS GP_STR_1 0               ; GP_STR_1 becomes "Split"
 LBL MAIN
     SETREG GP_STR_0 " "
     MEM_READ 0x00 GP_STR_1      ; READ STRING FROM STR_MEM_0 into string register 1
-    S_SUBS GP_STR_1 0           ; GP_STR_1 becomes the first CLI argument
-    S_COMP GP_STR_1 "USER"      ; Compare the first arg to the string user
+    SUBS GP_STR_1 0             ; GP_STR_1 becomes the first CLI argument
+    CMP GP_STR_1 "USER"         ; Compare the first arg to the string user
     JMP_EQ PARSE_USER           ; if they where the same, 
     S_COMP GP_STR_1 "FUNC"      ; Compare the first arg to the string func
     JMP_EQ PARSE_FUNC           ; they where equle, jump to parse func

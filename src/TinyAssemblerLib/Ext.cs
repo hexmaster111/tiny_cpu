@@ -1,3 +1,4 @@
+using System.Text;
 using TinyCpuLib;
 using static TinyAssemblerLib.TinyAsmTokenizer.Token;
 
@@ -5,112 +6,7 @@ namespace TinyExt;
 
 public static class Ext
 {
-    public static int ByteCount(this ArgumentType t) => t switch
-    {
-        ArgumentType.CONST => sizeof(int),
-        ArgumentType.IntRegister => sizeof(byte),
-        ArgumentType.NONE => 0,
-        ArgumentType.STR => throw new InvalidOperationException("str"),
-        _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
-    };
-
-    public static ArgumentType ArgTwoType(this OpCode oc) => oc switch
-    {
-        OpCode.NOOP => ArgumentType.NONE,
-        OpCode.INC_INTR => ArgumentType.NONE,
-        OpCode.DEC_INTR => ArgumentType.NONE,
-        OpCode.CALL_INTC => ArgumentType.NONE,
-        OpCode.CALL_INTR => ArgumentType.NONE,
-        OpCode.RET => ArgumentType.NONE,
-        OpCode.CALLD => ArgumentType.NONE,
-        OpCode.JMP_INTC_EQ => ArgumentType.NONE,
-        OpCode.JMP_INTC_NEQ => ArgumentType.NONE,
-        OpCode.JMP_INTC_GTR => ArgumentType.NONE,
-        OpCode.JMP_INTC_GEQ => ArgumentType.NONE,
-        OpCode.JMP_INTC_LES => ArgumentType.NONE,
-        OpCode.JMP_INTC_LEQ => ArgumentType.NONE,
-        OpCode.JMP_INTR_EQ => ArgumentType.NONE,
-        OpCode.JMP_INTR_NEQ => ArgumentType.NONE,
-        OpCode.JMP_INTR_GTR => ArgumentType.NONE,
-        OpCode.JMP_INTR_GEQ => ArgumentType.NONE,
-        OpCode.JMP_INTR_LES => ArgumentType.NONE,
-        OpCode.JMP_INTR_LEQ => ArgumentType.NONE,
-        OpCode.JMP_INTR => ArgumentType.NONE,
-        OpCode.JMP_INTC => ArgumentType.NONE,
-        OpCode.PUSH_INTC => ArgumentType.NONE,
-        OpCode.PUSH_INTR => ArgumentType.NONE,
-        OpCode.POP_INTR => ArgumentType.NONE,
-        OpCode.HALT => ArgumentType.NONE,
-
-        OpCode.SETREG_INTR_INTC => ArgumentType.CONST,
-        OpCode.ADD_INTR_INTC => ArgumentType.CONST,
-        OpCode.MUL_INTR_INTC => ArgumentType.CONST,
-        OpCode.DIV_INTR_INTC => ArgumentType.CONST,
-        OpCode.SUB_INTR_INTC => ArgumentType.CONST,
-        OpCode.MEM_READ_INTR_INTC => ArgumentType.CONST,
-        OpCode.MEM_WRITE_INTR_INTC => ArgumentType.CONST,
-
-        OpCode.SETREG_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.ADD_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.MUL_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.SUB_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.DIV_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.CMP_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.CMP_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.MEM_READ_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.MEM_WRITE_INTR_INTR => ArgumentType.IntRegister,
-        _ => throw new ArgumentOutOfRangeException(nameof(oc), oc, null)
-    };
-
-    public static ArgumentType ArgOneType(this OpCode oc) => oc switch
-    {
-        OpCode.NOOP => ArgumentType.NONE,
-        OpCode.RET => ArgumentType.NONE,
-        OpCode.CALLD => ArgumentType.NONE,
-        OpCode.HALT => ArgumentType.NONE,
-
-        OpCode.MEM_READ_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.MEM_READ_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.MEM_WRITE_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.MEM_WRITE_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.SETREG_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.SETREG_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.ADD_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.ADD_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.MUL_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.MUL_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.SUB_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.SUB_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.DIV_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.DIV_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.INC_INTR => ArgumentType.IntRegister,
-        OpCode.DEC_INTR => ArgumentType.IntRegister,
-        OpCode.CMP_INTR_INTC => ArgumentType.IntRegister,
-        OpCode.CMP_INTR_INTR => ArgumentType.IntRegister,
-        OpCode.PUSH_INTR => ArgumentType.IntRegister,
-        OpCode.POP_INTR => ArgumentType.IntRegister,
-        OpCode.CALL_INTR => ArgumentType.IntRegister,
-        OpCode.JMP_INTR_EQ => ArgumentType.IntRegister,
-        OpCode.JMP_INTR_NEQ => ArgumentType.IntRegister,
-        OpCode.JMP_INTR_GTR => ArgumentType.IntRegister,
-        OpCode.JMP_INTR_GEQ => ArgumentType.IntRegister,
-        OpCode.JMP_INTR_LES => ArgumentType.IntRegister,
-        OpCode.JMP_INTR_LEQ => ArgumentType.IntRegister,
-        OpCode.JMP_INTR => ArgumentType.IntRegister,
-
-        OpCode.PUSH_INTC => ArgumentType.CONST,
-        OpCode.CALL_INTC => ArgumentType.CONST,
-        OpCode.JMP_INTC_EQ => ArgumentType.CONST,
-        OpCode.JMP_INTC_NEQ => ArgumentType.CONST,
-        OpCode.JMP_INTC_GTR => ArgumentType.CONST,
-        OpCode.JMP_INTC_GEQ => ArgumentType.CONST,
-        OpCode.JMP_INTC_LES => ArgumentType.CONST,
-        OpCode.JMP_INTC_LEQ => ArgumentType.CONST,
-        OpCode.JMP_INTC => ArgumentType.CONST,
-        _ => throw new ArgumentOutOfRangeException(nameof(oc), oc, null)
-    };
-
-
+    
     public static int ExpectedArgumentCount(this TokenType t) => t switch
     {
         TokenType.NOOP => 0,
@@ -138,6 +34,8 @@ public static class Ext
         TokenType.JMP => 1,
         TokenType.MEM_READ => 2,
         TokenType.MEM_WRITE => 2,
+        TokenType.SCCAT => 2,
+        TokenType.SSPLIT => 2,
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };
 
@@ -145,10 +43,12 @@ public static class Ext
     {
         return @this switch
         {
-            ArgumentType.CONST => BitConverter.ToInt32(argData).ToString(),
+            ArgumentType.ConstInt => BitConverter.ToInt32(argData).ToString(),
             ArgumentType.IntRegister => ((IntRegisterIndex)argData[0]).ToString(),
             ArgumentType.NONE => "",
-            ArgumentType.STR => throw new InvalidOperationException(),
+            ArgumentType.FuncName => throw new InvalidOperationException(),
+            ArgumentType.StrRegister => ((StrRegisterIndex)argData[0]).ToString(),
+            ArgumentType.StrLiteral => Encoding.ASCII.GetString(argData),
             _ => throw new ArgumentOutOfRangeException(nameof(@this), @this, null)
         };
     }

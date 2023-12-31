@@ -56,7 +56,7 @@ public class FuncDef : ICuteLexNode
         {
             new AsmInst(new TinyAsmTokenizer.Token(
                 TinyAsmTokenizer.Token.TokenType.LBL,
-                TinyAsmTokenizer.Token.ArgumentType.STR,
+                TinyAsmTokenizer.Token.ArgumentType.FuncName,
                 TinyAsmTokenizer.Token.ArgumentType.NONE,
                 CuteCCompiler.NameSpace.Combine(NameSpace, FuncName.Data.Str)
             ))

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text;
 using TinyCpuLib;
 using OpCode = TinyCpuLib.OpCode;
 
@@ -73,24 +74,10 @@ public class TinyAsmAssembler
                     break;
 
                 case TinyAsmTokenizer.Token.TokenType.INC:
-                    FixSingleRegOnly(t, OpCode.INC_INTR);
+                    FixSingleRegOnly(t, OpCode.INC_INTR, OpCode.NOOP);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.DEC:
-                    FixSingleRegOnly(t, OpCode.DEC_INTR);
-                    break;
-                case TinyAsmTokenizer.Token.TokenType.POP:
-                    FixSingleRegOnly(t, OpCode.POP_INTR);
-                    break;
-
-                case TinyAsmTokenizer.Token.TokenType.PUSH:
-                    FixPushInst(t);
-                    break;
-
-                case TinyAsmTokenizer.Token.TokenType.SETREG:
-                    Fix_RR_RC(t, OpCode.SETREG_INTR_INTR, OpCode.SETREG_INTR_INTC);
-                    break;
-                case TinyAsmTokenizer.Token.TokenType.CMP:
-                    Fix_RR_RC(t, OpCode.CMP_INTR_INTR, OpCode.CMP_INTR_INTC);
+                    FixSingleRegOnly(t, OpCode.DEC_INTR, OpCode.NOOP);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.CALL:
                     FixCall(t, OpCode.CALL_INTC, OpCode.CALL_INTR); //CALL R?!
@@ -101,12 +88,39 @@ public class TinyAsmAssembler
                 case TinyAsmTokenizer.Token.TokenType.RET:
                     t.Freeze();
                     break;
+                case TinyAsmTokenizer.Token.TokenType.SCCAT:
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.SSPLIT:
+                    break;
+
+
+                case TinyAsmTokenizer.Token.TokenType.POP:
+                    FixSingleRegOnly(t, OpCode.POP_INTR, OpCode.POP_STRR);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.PUSH:
+                    FixPushInst(t);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.SETREG:
+                    Fix_intRR_intRC(t,
+                        OpCode.SETREG_INTR_INTR, OpCode.SETREG_INTR_INTC,
+                        OpCode.SETREG_STRR_STRR, OpCode.SETREG_STRR_STRC);
+                    break;
+                case TinyAsmTokenizer.Token.TokenType.CMP:
+                    Fix_intRR_intRC(t,
+                        OpCode.CMP_INTR_INTR, OpCode.CMP_INTR_INTC,
+                        OpCode.CMP_STRR_STRR, OpCode.CMP_STRR_STRC);
+                    break;
                 case TinyAsmTokenizer.Token.TokenType.MEM_READ:
-                    Fix_RR_RC(t, OpCode.MEM_READ_INTR_INTR, OpCode.MEM_READ_INTR_INTC);
+                    Fix_intRR_intRC(t,
+                        OpCode.MEM_READ_INTR_INTR, OpCode.MEM_READ_INTR_INTC,
+                        OpCode.MEM_READ_STRR_INTR, OpCode.STRSPLT_STRR_INTC);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.MEM_WRITE:
-                    Fix_RR_RC(t, OpCode.MEM_WRITE_INTR_INTR, OpCode.MEM_WRITE_INTR_INTC);
+                    Fix_intRR_intRC(t,
+                        OpCode.MEM_WRITE_INTR_INTR, OpCode.MEM_WRITE_INTR_INTC,
+                        OpCode.MEM_WRITE_STRR_INTR, OpCode.MEM_WRITE_STRR_INTC);
                     break;
+
 
                 case TinyAsmTokenizer.Token.TokenType.NONE:
                 default:
@@ -132,54 +146,79 @@ public class TinyAsmAssembler
         var token1Type = token.Token.ArgumentOneType;
 
         if (token0Type != TinyAsmTokenizer.Token.ArgumentType.IntRegister &&
-            token0Type != TinyAsmTokenizer.Token.ArgumentType.CONST)
+            token0Type != TinyAsmTokenizer.Token.ArgumentType.ConstInt &&
+            token0Type != TinyAsmTokenizer.Token.ArgumentType.StrRegister &&
+            token0Type != TinyAsmTokenizer.Token.ArgumentType.StrLiteral)
         {
             throw new Exception($"Arg 0 must be of type reg or const, got {token0Type}");
         }
 
         var opcode = token0Type switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)OpCode.PUSH_INTC,
+            TinyAsmTokenizer.Token.ArgumentType.ConstInt => (byte)OpCode.PUSH_INTC,
             TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)OpCode.PUSH_INTR,
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => (byte)OpCode.PUSH_STRR,
+            TinyAsmTokenizer.Token.ArgumentType.StrLiteral => (byte)OpCode.PUSH_STRC,
             _ => throw new ArgumentOutOfRangeException()
         };
 
         var argZeroBytes = token0Type switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(token.Token.ArgumentZeroData)),
+            TinyAsmTokenizer.Token.ArgumentType.ConstInt => GetIntConst(GetIntConst(token.Token.ArgumentZeroData)),
             TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[]
-                { GetRegisterByteConst(token.Token.ArgumentZeroData) },
+                { GetIntRegisterByteValue(token.Token.ArgumentZeroData) },
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => new[]
+                { GetStrRegisterByteValue(token.Token.ArgumentZeroData) },
+            TinyAsmTokenizer.Token.ArgumentType.StrLiteral => Encoding.ASCII.GetBytes(token.Token.ArgumentZeroData),
             _ => throw new ArgumentOutOfRangeException()
         };
 
         var data = token.GetData();
         data[0] = opcode;
         data[1] = argZeroBytes[0];
-        if (token0Type == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        if (token0Type == TinyAsmTokenizer.Token.ArgumentType.ConstInt)
         {
             data[2] = argZeroBytes[1];
             data[3] = argZeroBytes[2];
             data[4] = argZeroBytes[3];
         }
 
+        if (token0Type == TinyAsmTokenizer.Token.ArgumentType.StrLiteral)
+        {
+            argZeroBytes[^1] = 0;
+            Array.Copy(argZeroBytes, 0, data, 2, argZeroBytes.Length);
+        }
+
         token.Freeze();
     }
 
-    private void FixSingleRegOnly(AsmToken token, OpCode code)
+    private void FixSingleRegOnly(AsmToken token, OpCode code_i, OpCode code_s)
     {
         var token0Type = token.Token.ArgumentZeroType;
         var token1Type = token.Token.ArgumentOneType;
 
-        if (token0Type != TinyAsmTokenizer.Token.ArgumentType.IntRegister)
+        if (!(token0Type == TinyAsmTokenizer.Token.ArgumentType.IntRegister ||
+              token0Type == TinyAsmTokenizer.Token.ArgumentType.StrRegister))
             throw new Exception($"Arg 0 of {token.Token.Type} must be a register");
 
         if (token1Type != TinyAsmTokenizer.Token.ArgumentType.NONE)
             throw new Exception($"{token.Token.Type} Unexpected arg");
 
 
-        var destRegAddr = GetRegisterByteConst(token.Token.ArgumentZeroData);
+        var destRegAddr = token0Type switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => GetIntRegisterByteValue(token.Token.ArgumentZeroData),
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => GetStrRegisterByteValue(token.Token.ArgumentZeroData),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
         var data = token.GetData();
-        data[0] = (byte)code;
+        data[0] = token0Type switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)code_i,
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => (byte)code_s,
+            _ => throw new ArgumentOutOfRangeException()
+        };
         data[1] = destRegAddr;
         token.Freeze();
     }
@@ -193,20 +232,21 @@ public class TinyAsmAssembler
             throw new Exception($"Arg 0 must be of type register, got {token0Type}");
 
         if (token1Type != TinyAsmTokenizer.Token.ArgumentType.IntRegister &&
-            token1Type != TinyAsmTokenizer.Token.ArgumentType.CONST)
+            token1Type != TinyAsmTokenizer.Token.ArgumentType.ConstInt)
             throw new Exception($"Arg 1 must be of type register or constant, got {token1Type}");
 
-        var dstRegister = GetRegisterByteConst(token.Token.ArgumentZeroData);
+        var dstRegister = GetIntRegisterByteValue(token.Token.ArgumentZeroData);
         var token1Data = token1Type switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(token.Token.ArgumentOneData)),
-            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[] { GetRegisterByteConst(token.Token.ArgumentOneData) },
+            TinyAsmTokenizer.Token.ArgumentType.ConstInt => GetIntConst(GetIntConst(token.Token.ArgumentOneData)),
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[]
+                { GetIntRegisterByteValue(token.Token.ArgumentOneData) },
             _ => throw new ArgumentOutOfRangeException()
         };
 
         var opCode = token1Type switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)constVerOpCode,
+            TinyAsmTokenizer.Token.ArgumentType.ConstInt => (byte)constVerOpCode,
             TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)registerVerOpCode,
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -215,7 +255,7 @@ public class TinyAsmAssembler
         data[0] = opCode;
         data[1] = dstRegister;
         data[2] = token1Data[0];
-        if (token1Type == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        if (token1Type == TinyAsmTokenizer.Token.ArgumentType.ConstInt)
         {
             data[3] = token1Data[1];
             data[4] = token1Data[2];
@@ -227,7 +267,7 @@ public class TinyAsmAssembler
 
     private void FixCall(AsmToken asmToken, OpCode constOpCode, OpCode registerOpCode)
     {
-        if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.ConstInt)
         {
             var data = asmToken.GetData();
             data[0] = (byte)constOpCode;
@@ -244,12 +284,12 @@ public class TinyAsmAssembler
             var regIndex = Enum.Parse<IntRegisterIndex>(asmToken.Token.ArgumentZeroData);
             data[1] = (byte)regIndex;
         }
-        else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.STR)
+        else if (asmToken.Token.ArgumentZeroType == TinyAsmTokenizer.Token.ArgumentType.FuncName)
         {
             var targetInst = AsmTokens.Where(x => x.Token is
                 {
                     Type: TinyAsmTokenizer.Token.TokenType.LBL,
-                    ArgumentZeroType: TinyAsmTokenizer.Token.ArgumentType.STR
+                    ArgumentZeroType: TinyAsmTokenizer.Token.ArgumentType.FuncName
                 }).Where(x => x.Token.ArgumentZeroData == asmToken.Token.ArgumentZeroData)
                 .ToImmutableArray();
 
@@ -277,54 +317,75 @@ public class TinyAsmAssembler
         asmToken.Freeze(); //Mark any call as Ready for output
     }
 
-    private void Fix_RR_RC(AsmToken asmToken, OpCode rr, OpCode rc)
+    private void Fix_intRR_intRC(AsmToken asmToken, OpCode int_r_r, OpCode int_r_c, OpCode str_r_r, OpCode str_r_c)
     {
-        if (asmToken.Token.ArgumentZeroType is not TinyAsmTokenizer.Token.ArgumentType.IntRegister)
+        if (asmToken.Token.ArgumentZeroType != TinyAsmTokenizer.Token.ArgumentType.IntRegister &&
+            asmToken.Token.ArgumentZeroType != TinyAsmTokenizer.Token.ArgumentType.StrRegister)
         {
             throw new ArgumentException(
-                $"First Arg of {asmToken.Token.Type} must be of type IntRegister, got {asmToken.Token.ArgumentZeroType}:" +
+                $"First Arg of {asmToken.Token.Type} must be of type IntRegister or StrRegister," +
+                $" got {asmToken.Token.ArgumentZeroType}:" +
                 $"\"{asmToken.Token.ArgumentZeroData}\"");
         }
 
-        var argOneType = asmToken.Token.ArgumentOneType;
-        var argOneData = asmToken.Token.ArgumentOneData;
 
-        var arg1Data = argOneType switch
+        var arg1DataStr = asmToken.Token.ArgumentOneData;
+        var arg1Data = asmToken.Token.ArgumentOneType switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => GetIntConst(GetIntConst(argOneData)),
-            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[] { GetRegisterByteConst(argOneData) },
-            TinyAsmTokenizer.Token.ArgumentType.STR => throw new Exception(
-                $"String arg not valid with set register for {asmToken}"),
-            TinyAsmTokenizer.Token.ArgumentType.NONE => throw new Exception(
-                $"Expected a register or a constant for {asmToken}"),
+            TinyAsmTokenizer.Token.ArgumentType.ConstInt => GetIntConst(GetIntConst(arg1DataStr)),
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => new[] { GetIntRegisterByteValue(arg1DataStr) },
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => new[] { GetStrRegisterByteValue(arg1DataStr) },
+            TinyAsmTokenizer.Token.ArgumentType.StrLiteral => new byte[Encoding.ASCII.GetBytes(arg1DataStr).Length + 1],
             _ => throw new ArgumentOutOfRangeException()
         };
-        var argZeroData = GetRegisterByteConst(asmToken.Token.ArgumentZeroData);
+
+
+        var argZeroData = asmToken.Token.ArgumentZeroType switch
+        {
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => GetIntRegisterByteValue(asmToken.Token.ArgumentZeroData),
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => GetStrRegisterByteValue(asmToken.Token.ArgumentZeroData),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
 
         var data = asmToken.GetData();
+        //Setting the opcode for the instruction based on the data type of the first argument
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-        data[0] = argOneType switch
+        data[0] = asmToken.Token.ArgumentOneType switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => (byte)rc,
-            TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)rr,
+            TinyAsmTokenizer.Token.ArgumentType.ConstInt => (byte)int_r_c,
+            TinyAsmTokenizer.Token.ArgumentType.IntRegister => (byte)int_r_r,
+            TinyAsmTokenizer.Token.ArgumentType.StrLiteral => (byte)str_r_c,
+            TinyAsmTokenizer.Token.ArgumentType.StrRegister => (byte)str_r_r,
             _ => throw new ArgumentOutOfRangeException()
         };
 
         data[1] = argZeroData;
         data[2] = arg1Data[0];
 
-        if (argOneType == TinyAsmTokenizer.Token.ArgumentType.CONST)
+        if (asmToken.Token.ArgumentOneType == TinyAsmTokenizer.Token.ArgumentType.ConstInt)
         {
             data[3] = arg1Data[1];
             data[4] = arg1Data[2];
             data[5] = arg1Data[3];
         }
 
+        if (asmToken.Token.ArgumentOneType == TinyAsmTokenizer.Token.ArgumentType.StrLiteral)
+        {
+            var dat = Encoding.ASCII.GetBytes(arg1DataStr);
+            Array.Copy(dat, 0, data, 2, dat.Length);
+            //Null terminate the string
+            data[^1] = 0;
+        }
+
+        Console.WriteLine($"Token line : {asmToken.Token.ToString()}");
+        Console.WriteLine($"{arg1DataStr} -> {string.Join(", ", arg1Data.Select(x => $"0x{x:x2}"))}");
+        Console.WriteLine($"{asmToken.Token.ArgumentZeroData} -> {argZeroData:x2}");
         asmToken.Freeze();
     }
 
-    private byte GetRegisterByteConst(string argData) => (byte)Enum.Parse<IntRegisterIndex>(argData);
+    private byte GetIntRegisterByteValue(string argData) => (byte)Enum.Parse<IntRegisterIndex>(argData);
+    private byte GetStrRegisterByteValue(string argData) => (byte)Enum.Parse<StrRegisterIndex>(argData);
 
     public int GetInstAddress(AsmToken lbl)
     {
@@ -392,27 +453,29 @@ public class AsmToken : IFreezable
     private static int GetArgSize(
         TinyAsmTokenizer.Token.ArgumentType argType,
         string argData,
-        TinyAsmTokenizer.Token parentToken) =>
-        argType switch
+        TinyAsmTokenizer.Token parentToken
+    ) => argType switch
+    {
+        TinyAsmTokenizer.Token.ArgumentType.ConstInt => 4,
+        TinyAsmTokenizer.Token.ArgumentType.IntRegister => 1,
+        TinyAsmTokenizer.Token.ArgumentType.FuncName => parentToken.Type switch
         {
-            TinyAsmTokenizer.Token.ArgumentType.CONST => 4,
-            TinyAsmTokenizer.Token.ArgumentType.IntRegister => 1,
-            TinyAsmTokenizer.Token.ArgumentType.STR => parentToken.Type switch
-            {
-                TinyAsmTokenizer.Token.TokenType.LBL => 0, //label just turns into a CALLDST and thats just the opcode
-                TinyAsmTokenizer.Token.TokenType.CALL => 4, //INT address
-                TinyAsmTokenizer.Token.TokenType.JMP_EQ => 4, //INT Address
-                TinyAsmTokenizer.Token.TokenType.JMP_NEQ => 4, //INT Address
-                TinyAsmTokenizer.Token.TokenType.JMP_GTR => 4, //INT Address
-                TinyAsmTokenizer.Token.TokenType.JMP_GEQ => 4, //INT Address
-                TinyAsmTokenizer.Token.TokenType.JMP_LES => 4, //INT Address
-                TinyAsmTokenizer.Token.TokenType.JMP_LEQ => 4, //INT Address
-                TinyAsmTokenizer.Token.TokenType.JMP => 4, //INT Address
-                var v => throw new ArgumentOutOfRangeException($"{parentToken}")
-            },
-            TinyAsmTokenizer.Token.ArgumentType.NONE => 0,
-            _ => throw new ArgumentOutOfRangeException(nameof(argType), argType, null)
-        };
+            TinyAsmTokenizer.Token.TokenType.LBL => 0, //label just turns into a CALLDST and thats just the opcode
+            TinyAsmTokenizer.Token.TokenType.CALL => 4, //INT address
+            TinyAsmTokenizer.Token.TokenType.JMP_EQ => 4, //INT Address
+            TinyAsmTokenizer.Token.TokenType.JMP_NEQ => 4, //INT Address
+            TinyAsmTokenizer.Token.TokenType.JMP_GTR => 4, //INT Address
+            TinyAsmTokenizer.Token.TokenType.JMP_GEQ => 4, //INT Address
+            TinyAsmTokenizer.Token.TokenType.JMP_LES => 4, //INT Address
+            TinyAsmTokenizer.Token.TokenType.JMP_LEQ => 4, //INT Address
+            TinyAsmTokenizer.Token.TokenType.JMP => 4, //INT Address
+            var v => throw new ArgumentOutOfRangeException($"{parentToken}")
+        },
+        TinyAsmTokenizer.Token.ArgumentType.NONE => 0,
+        TinyAsmTokenizer.Token.ArgumentType.StrRegister => 1, //1 byte for register
+        TinyAsmTokenizer.Token.ArgumentType.StrLiteral => Encoding.ASCII.GetBytes(argData).Length + 1, //+1 for null
+        _ => throw new ArgumentOutOfRangeException(nameof(argType), argType, null)
+    };
 
 
     public void Deconstruct(out TinyAsmTokenizer.Token Token, out byte[] Data)

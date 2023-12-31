@@ -38,7 +38,7 @@ public class FuncCall : ICuteLexNode
         ret.Add(new AsmInst(
             new(
                 TinyAsmTokenizer.Token.TokenType.CALL,
-                TinyAsmTokenizer.Token.ArgumentType.STR,
+                TinyAsmTokenizer.Token.ArgumentType.FuncName,
                 TinyAsmTokenizer.Token.ArgumentType.NONE, fnBeingCalled.CallableName, "")));
         return ret;
     }
