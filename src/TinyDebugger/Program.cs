@@ -48,7 +48,9 @@ internal static class Program
 /*84:*/ 0xB4, 0x6B, 0x00, 0x00, 0x00, // [JMP_INTC] JMP PARSE_DONE 
 /*89:*/ 0xA6, // [CALLD] LBL ERROR_FUNC 
 /*8a:*/ 0xCE, 0x01, // [POP_STRR] POP GP_STR_1 
-/*8c:*/ 0xFF, // [HALT] HALT  
+/*8c:*/ 0xB7, 0x01, 0x01, 0x00, 0x00, 0x00, // [MEM_WRITE_INTR_INTC] MEM_WRITE GP_STR_1 1
+/*92:*/ 0xFF, // [HALT] HALT  
+
         };
         cpu.LoadProgram(program);
         List<DecompToken> decomp = new();

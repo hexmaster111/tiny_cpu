@@ -10,10 +10,16 @@ public readonly struct VirtualMemory : IMemory
     {
         IntMem = new int[16];
         StrMem = new string[16];
+        for (var i = 0; i < IntMem.Length; i++)
+        {
+            IntMem[i] = 0;
+            StrMem[i] = "";
+        }
     }
 
     public string ReadStr(int memAddress) => StrMem[memAddress];
     public void WriteStr(int memAddress, string value) => StrMem[memAddress] = value;
+
 
     public int ReadInt(int address) => IntMem[address];
     public void WriteInt(int address, int value) => IntMem[address] = value;
@@ -24,5 +30,8 @@ public readonly struct VirtualMemory : IMemory
         set => WriteInt(address, value);
     }
 
+    
+    //TODO: clone the arrays
     public int[] Debugger_ReadAllIntMemoryAddresses() => IntMem;
+    public string[] Debugger_ReadAllStrMemoryAddresses() => StrMem;
 }

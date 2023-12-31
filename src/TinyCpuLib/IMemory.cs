@@ -9,4 +9,5 @@ public interface IMemory
     public int MemorySize { get; }
     string ReadStr(int memAddress);
     void WriteStr(int memAddress, string value);
+    public string[] Debugger_ReadAllStrMemoryAddresses();
 }

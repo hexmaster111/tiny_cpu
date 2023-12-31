@@ -12,12 +12,13 @@ internal static partial class TinyCpuUi
     private static SimpleTimer _runTimer = new(1000);
 
     private static bool _drawRegistersWindow = true;
-    private static bool _drawMemoryWindow = true;
+    private static bool _drawMemoryIntWindow = true;
     private static bool _drawDumpWindow = false;
     private static bool _drawDecompWindow = true;
     private static bool _drawReferenceWindow = false;
     private static bool _drawControlMenu = true;
     private static bool _drawTankFillExample = false;
+    private static bool _drawMemoryStrWindow = true;
 
 
     public static void Render(TinyCpu cpu, List<DecompToken> decomp)
@@ -25,7 +26,7 @@ internal static partial class TinyCpuUi
         ImGui.DockSpaceOverViewport();
         DrawMainMenuBar();
         if (_drawRegistersWindow) DrawRegistersWindow(cpu);
-        if (_drawMemoryWindow) DrawMemoryWindow(cpu);
+        if (_drawMemoryIntWindow) DrawMemoryWindow(cpu);
         if (_drawDumpWindow) DrawDumpWindow(cpu);
         if (_drawDecompWindow) DrawDecompWindow(decomp, cpu.Reg.INST_PTR);
         if (_drawControlMenu) DrawCpuControlWindow(cpu);
@@ -101,7 +102,7 @@ internal static partial class TinyCpuUi
             if (ImGui.BeginMenu("View"))
             {
                 ImGui.MenuItem("Registers", "", ref _drawRegistersWindow);
-                ImGui.MenuItem("Memory", "", ref _drawMemoryWindow);
+                ImGui.MenuItem("Memory", "", ref _drawMemoryIntWindow);
                 ImGui.MenuItem("Dump", "", ref _drawDumpWindow);
                 ImGui.MenuItem("Decomp", "", ref _drawDecompWindow);
                 ImGui.MenuItem("Reference", "", ref _drawReferenceWindow);
@@ -302,12 +303,12 @@ internal static partial class TinyCpuUi
             ImGui.Separator();
             ImGui.NextColumn();
 
-            var enumNames = Enum.GetNames(typeof(IntRegisterIndex));
+            var intRegEnumNames = Enum.GetNames(typeof(IntRegisterIndex));
 
             for (var i = 0; i < cpu.Reg.Int.Length; i++)
             {
                 ref var regVal = ref cpu.Reg.Int[i];
-                var regName = enumNames[i];
+                var regName = intRegEnumNames[i];
                 var emu = (IntRegisterIndex)i;
                 ImGui.Text(regName);
                 ImGui.NextColumn();
@@ -332,6 +333,21 @@ internal static partial class TinyCpuUi
 
             ImGui.Columns(1);
             ImGui.Separator();
+
+            var strRegEnumNames = Enum.GetNames(typeof(StrRegisterIndex));
+            for (var i = 0; i < cpu.Reg.Str.Length; i++)
+            {
+                ref var regVal = ref cpu.Reg.Str[i];
+                var regName = strRegEnumNames[i];
+                var emu = (StrRegisterIndex)i;
+                ImGui.Text(regName);
+                ImGui.NextColumn();
+                ImGui.InputText($"##{regName}", ref regVal, 256);
+                ImGui.NextColumn();
+            }
+
+            ImGui.Columns(1);
+            ImGui.Separator();
         }
 
         ImGui.End();
@@ -339,7 +355,7 @@ internal static partial class TinyCpuUi
 
     private static void DrawMemoryWindow(TinyCpu cpu)
     {
-        if (ImGui.Begin("TinyCpu - Memory", ref _drawMemoryWindow))
+        if (ImGui.Begin("TinyCpu - Memory - INT", ref _drawMemoryIntWindow))
         {
             // draw a table of memory
             // | Address | Value (DEC_INTR)| Value (HEX) |
@@ -370,6 +386,30 @@ internal static partial class TinyCpuUi
 
             ImGui.Columns(1);
             ImGui.Separator();
+            // }
+            //
+            // ImGui.End();
+            //
+            //
+            // if (ImGui.Begin("TinyCpu - Memory - STR", ref _drawMemoryStrWindow))
+            // {
+            ImGui.Columns(2);
+            ImGui.Text("Address");
+            ImGui.NextColumn();
+            ImGui.Text("Value (ascii)");
+            ImGui.Separator();
+            ImGui.NextColumn();
+            var strings = cpu.Memory.Debugger_ReadAllStrMemoryAddresses();
+
+            for (var i = 0; i < cpu.Memory.MemorySize; i++)
+            {
+                var memValTmp = strings[i];
+                var memName = i.ToString("X4");
+                ImGui.Text(memName);
+                ImGui.NextColumn();
+                ImGui.InputText($"##{memName}", ref memValTmp, 256);
+                ImGui.NextColumn();
+            }
         }
 
         ImGui.End();

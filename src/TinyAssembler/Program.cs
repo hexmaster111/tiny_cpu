@@ -41,6 +41,7 @@ internal class Program
              ; stack 0 ( str error )    
              LBL ERROR_FUNC
                  POP GP_STR_1            ; takes the error arg and puts it in str 0
+                 MEM_WRITE GP_STR_1 0x01 ; writes the error string to the string memory ( 1 )
                  HALT
              """)
             .Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
