@@ -376,7 +376,7 @@ internal static partial class TinyCpuUi
                 var memName = i.ToString("X4");
                 ImGui.Text(memName);
                 ImGui.NextColumn();
-                ImGui.InputInt($"##{memName}", ref memValTmp);
+                ImGui.InputInt($"##{memName}memory", ref memValTmp);
                 ImGui.NextColumn();
                 ImGui.Text(memValTmp.ToString("X8"));
                 ImGui.NextColumn();
@@ -407,7 +407,7 @@ internal static partial class TinyCpuUi
                 var memName = i.ToString("X4");
                 ImGui.Text(memName);
                 ImGui.NextColumn();
-                ImGui.InputText($"##{memName}", ref memValTmp, 256);
+                ImGui.InputText($"##{memName}strmem", ref memValTmp, 256);
                 ImGui.NextColumn();
             }
         }
