@@ -30,6 +30,7 @@ internal static class Program
             Raylib.ClearBackground(Color.BLACK);
             rlImGui.Begin();
             TinyCpuUi.Render(ref cpu,ref decomp);
+            TinyByteCodeIde.Render(ref cpu);
             ImGui.ShowDemoWindow();
             ImGui.End();
             rlImGui.End();
