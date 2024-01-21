@@ -91,11 +91,6 @@ public class TinyAsmAssembler
                 case TinyAsmTokenizer.Token.TokenType.SCCAT:
                     FixCCat(t);
                     break;
-                case TinyAsmTokenizer.Token.TokenType.SSPLIT:
-                    FixSSPlit(t);
-                    break;
-
-
                 case TinyAsmTokenizer.Token.TokenType.POP:
                     FixSingleRegOnly(t, OpCode.POP_INTR, OpCode.POP_STRR);
                     break;
@@ -115,15 +110,13 @@ public class TinyAsmAssembler
                 case TinyAsmTokenizer.Token.TokenType.MEM_READ:
                     Fix_intRR_intRC(t,
                         OpCode.MEM_READ_INTR_INTR, OpCode.MEM_READ_INTR_INTC,
-                        OpCode.MEM_READ_STRR_INTR, OpCode.STRSPLT_STRR_INTC);
+                        OpCode.MEM_READ_STRR_INTR, OpCode.MEM_READ_STRR_INTC);
                     break;
                 case TinyAsmTokenizer.Token.TokenType.MEM_WRITE:
                     Fix_intRR_intRC(t,
                         OpCode.MEM_WRITE_INTR_INTR, OpCode.MEM_WRITE_INTR_INTC,
                         OpCode.MEM_WRITE_STRR_INTR, OpCode.MEM_WRITE_STRR_INTC);
                     break;
-
-
                 case TinyAsmTokenizer.Token.TokenType.NONE:
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -131,25 +124,7 @@ public class TinyAsmAssembler
         }
     }
 
-    private void FixSSPlit(AsmToken asmToken)
-    {
-        var token0Type = asmToken.Token.ArgumentZeroType;
-        var token1Type = asmToken.Token.ArgumentOneType;
 
-        if (token0Type != TinyAsmTokenizer.Token.ArgumentType.StrRegister)
-            throw new Exception($"Arg 0 must be of type StrRegister, got {token0Type}");
-
-        if (token1Type != TinyAsmTokenizer.Token.ArgumentType.ConstInt)
-            throw new Exception($"Arg 1 must be of type ConstInt, got {token1Type}");
-
-        var argZeroData = GetStrRegisterByteValue(asmToken.Token.ArgumentZeroData);
-        var argOneData = GetIntConst(asmToken.Token.ArgumentOneData);
-        var data = asmToken.GetData();
-        data[0] = (byte)OpCode.STRSPLT_STRR_INTC;
-        data[1] = argZeroData;
-        var argOneDataBytes = GetIntConst(argOneData);
-        Array.Copy(argOneDataBytes, 0, data, 2, argOneDataBytes.Length);
-    }
 
     private void FixCCat(AsmToken asmToken)
     {

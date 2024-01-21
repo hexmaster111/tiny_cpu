@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Runtime.InteropServices;
+using System.Text;
 using TinyAssemblerLib;
 using TinyCpuLib;
 
@@ -33,8 +34,7 @@ public static class CAsmAssembler
         WriteAsmToFile(outputPath, hec);
     }
 
-
-    public static HecFile AssembleFromFileLines(string[] fileLines)
+    public static (HecFile file, string verifyLog) AssembleFromFileLinesDbg(string[] fileLines)
     {
         //do build work
         var tokenizer = new TinyAsmTokenizer(fileLines);
@@ -42,19 +42,24 @@ public static class CAsmAssembler
         return AssembleFromTokens(tokens);
     }
 
-    public static HecFile AssembleFromTokens(ImmutableArray<TinyAsmTokenizer.Token> tokens)
+    public static HecFile AssembleFromFileLines(string[] fileLines)
+    {
+        //do build work
+        var tokenizer = new TinyAsmTokenizer(fileLines);
+        var tokens = tokenizer.Nom();
+        return AssembleFromTokens(tokens).file;
+    }
+
+    public static (HecFile file, string verifyLog) AssembleFromTokens(ImmutableArray<TinyAsmTokenizer.Token> tokens)
     {
         var asm = new TinyAsmAssembler(tokens);
         var codeSectionBytes = asm.Assemble();
         var hecFile = HecFile.New(codeSectionBytes);
-        VerifyAssembly(codeSectionBytes, hecFile, asm);
-
-        return hecFile;
+        return (hecFile, VerifyAssembly(codeSectionBytes, hecFile, asm));
     }
 
     public static (TinyAsmAssembler, HecFile) AssembleFromTokensToTable(ImmutableArray<TinyAsmTokenizer.Token> tokens)
     {
-        
         var asm = new TinyAsmAssembler(tokens);
         var codeSectionBytes = asm.Assemble();
         var hecFile = HecFile.New(codeSectionBytes);
@@ -70,12 +75,11 @@ public static class CAsmAssembler
         File.WriteAllBytes(outputPath, hecFile.GetFileBytes());
     }
 
-
-    private static void VerifyAssembly(byte[] codeSectionBytes, HecFile hecFile, TinyAsmAssembler asm)
+    private static string VerifyAssembly(byte[] codeSectionBytes, HecFile hecFile, TinyAsmAssembler asm)
     {
         //Verify the hec file assembles layout is correct to the data we gave it
         var zip = codeSectionBytes.Zip(hecFile.TinyCpuCode);
-#if DEBUG
+
         bool fail = false;
 
         Console.WriteLine("Verifying Assembly");
@@ -103,19 +107,37 @@ public static class CAsmAssembler
 
         Console.WriteLine("Assembly ok");
 
+        var sb = new StringBuilder();
         foreach (var inst in asm.AsmTokens)
         {
             string instString = "";
+            var len = 0;
             foreach (var b in inst.GetReadOnlyData())
             {
-                instString += "0x" + b.ToString("X2") + ", ";
+                var s = "0x" + b.ToString("X2") + ", ";
+                instString += s;
+                len += s.Length;
             }
 
-            Console.WriteLine($"/*{asm.GetInstAddress(inst):x2}:*/ " +
-                              instString +
-                              $"// [{(OpCode)inst.GetReadOnlyData()[0]}] {inst.Token.Type} {inst.Token.ArgumentZeroData} {inst.Token.ArgumentOneData}");
+            const int commentStart = 40;
+
+
+            var instAddress = $"{asm.GetInstAddress(inst):x2}:";
+            var lp2 = instString;
+            var lp3 = $"// [{(OpCode)inst.GetReadOnlyData()[0]}]" +
+                      $"{inst.Token.Type}" + $" {inst.Token.ArgumentZeroData}" + $" {inst.Token.ArgumentOneData}";
+            sb.Append(instAddress);
+            sb.Append(lp2);
+            sb.Append(' ', NumGtrThenZero(commentStart - len));
+            sb.AppendLine(lp3);
         }
-#endif
+
+        return sb.ToString();
+
+        int NumGtrThenZero(int i)
+        {
+            return i > 0 ? i : 0;
+        }
     }
 }
 

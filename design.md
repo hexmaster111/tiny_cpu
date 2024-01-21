@@ -172,8 +172,6 @@ FLAGS_0 USAGE TABLE
 |      C3 | CCAT_STRR_STRC      | [DEST] STR REG          | SRC STR CONST         | DEST_REG = DEST_REG + SRC_STR         |              |
 |      C4 | CMP_STRR_STRR       | [SRC] STR REG A         | SRC STR REG B         | sets FLAGS like CMP_INTR_INTR         |              |
 |      C5 | CMP_STRR_STRC       | [SRC] STR REG A         | SRC STR CONST B       | sets flags like CMP_INTR_INTC         |              |
-|      C6 | STRSPLT_STRR_INTC   | [DEST/SRC] STR TO SPLIT | CONST INT INDEX       | splits ARG0, saves res no ARG1        | split string |
-|      C7 | STRSPLT_STRR_INTR   | [DEST/SRC] STR TO SPLIT | CONST INT INDEX       | splits ARG0, saves res no ARG1        | split string |
 |      C8 | MEM_READ_STRR_INTC  | [DEST] DST TO READ TO   | CONST INT ADDR        | Reads str memory at index ARG1        |              |
 |      C9 | MEM_READ_STRR_INTR  | [DEST] DST TO READ TO   | INT REG ADDR          | Reads str memory at index ARG1        |              |
 |      CA | MEM_WRITE_STRR_INTC | [SRC] SRC TO WRITE TO   | CONST INT ADDR        | Writes str from ARG0 into mem         |              |

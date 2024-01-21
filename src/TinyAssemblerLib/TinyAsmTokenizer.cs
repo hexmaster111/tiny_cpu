@@ -45,6 +45,7 @@ public class TinyAsmTokenizer
             List<string> cmdParts = new();
             SplitLine(line, cmdParts);
             for (var i = 0; i < cmdParts.Count; i++) cmdParts[i] = cmdParts[i].Trim();
+            cmdParts = cmdParts.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
             return FromParts(cmdParts.ToArray(), line);
         }
 
@@ -284,7 +285,6 @@ public class TinyAsmTokenizer
             MEM_READ,
             MEM_WRITE,
             SCCAT,
-            SSPLIT,
         }
 
         public enum ArgumentType

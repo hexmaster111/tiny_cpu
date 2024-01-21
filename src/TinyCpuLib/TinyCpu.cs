@@ -279,25 +279,8 @@ public class TinyCpu
                 Reg.Int[(int)IntRegisterIndex.INST_PTR] += regB.Length + 3;
                 return;
             }
-            case OpCode.STRSPLT_STRR_INTC:
-            {
-                var destReg = ReadInstStrRegIndexRel(1);
-                var start = ReadInstructionIntRel(2);
-                var str = Reg.Str[(int)destReg];
-                Reg.Str[(int)destReg] = str.Substring(start);
-                break;
-            }
-            case OpCode.STRSPLT_STRR_INTR:
-            {
-                var destReg = ReadInstStrRegIndexRel(1);
-                var partWanted = ReadInstructionIntRel(2);
-                var splitChar = Reg.Str[0];
-                var str = Reg.Str[(int)destReg];
-                var parts = str.Split(splitChar);
-                if (partWanted >= parts.Length) throw new Exception("Invalid part wanted");
-                Reg.Str[(int)destReg] = parts[partWanted];
-                break;
-            }
+
+       
 
             case OpCode.MEM_READ_STRR_INTC:
             {
@@ -511,8 +494,6 @@ public enum OpCode : byte
     CCAT_STRR_STRC = 0xC3,
     CMP_STRR_STRR = 0xC4,
     CMP_STRR_STRC = 0xC5,
-    STRSPLT_STRR_INTC = 0xC6,
-    STRSPLT_STRR_INTR = 0xC7,
     MEM_READ_STRR_INTC = 0xC8,
     MEM_READ_STRR_INTR = 0xC9,
     MEM_WRITE_STRR_INTC = 0xCA,

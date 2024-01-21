@@ -203,11 +203,9 @@ public static class Ext
         OpCode.CMP_INTR_INTR => TinyAsmTokenizer.Token.ArgumentType.IntRegister,
         OpCode.MEM_READ_INTR_INTR => TinyAsmTokenizer.Token.ArgumentType.IntRegister,
         OpCode.MEM_WRITE_INTR_INTR => TinyAsmTokenizer.Token.ArgumentType.IntRegister,
-        OpCode.STRSPLT_STRR_INTR => TinyAsmTokenizer.Token.ArgumentType.IntRegister,
         OpCode.MEM_READ_STRR_INTR => TinyAsmTokenizer.Token.ArgumentType.IntRegister,
         OpCode.MEM_WRITE_STRR_INTR => TinyAsmTokenizer.Token.ArgumentType.IntRegister,
 
-        OpCode.STRSPLT_STRR_INTC => TinyAsmTokenizer.Token.ArgumentType.ConstInt,
         OpCode.MEM_READ_STRR_INTC => TinyAsmTokenizer.Token.ArgumentType.ConstInt,
         OpCode.MEM_WRITE_STRR_INTC => TinyAsmTokenizer.Token.ArgumentType.ConstInt,
 
@@ -274,8 +272,6 @@ public static class Ext
         OpCode.CCAT_STRR_STRC => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
         OpCode.CMP_STRR_STRR => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
         OpCode.CMP_STRR_STRC => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
-        OpCode.STRSPLT_STRR_INTC => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
-        OpCode.STRSPLT_STRR_INTR => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
         OpCode.MEM_READ_STRR_INTC => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
         OpCode.MEM_READ_STRR_INTR => TinyAsmTokenizer.Token.ArgumentType.StrRegister,
         OpCode.MEM_WRITE_STRR_INTC => TinyAsmTokenizer.Token.ArgumentType.StrRegister,

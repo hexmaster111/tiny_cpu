@@ -10,7 +10,6 @@ internal static partial class TinyCpuUi
 {
     public static bool RunCpu = false;
     private static SimpleTimer _runTimer = new(1000);
-
     private static bool _drawRegistersWindow = true;
     private static bool _drawMemoryIntWindow = true;
     private static bool _drawDumpWindow = false;
@@ -19,9 +18,12 @@ internal static partial class TinyCpuUi
     private static bool _drawControlMenu = true;
     private static bool _drawTankFillExample = false;
     private static bool _drawMemoryStrWindow = true;
+    private static CurrentCodeMode _currentCodeMode = CurrentCodeMode.Asm;
+    private static float _tankFillExample_tankLevel = 0.00f;
+    private static bool _tankFillExample_enable = false;
 
 
-    public static void Render(TinyCpu cpu, List<DecompToken> decomp)
+    public static void Render(ref TinyCpu cpu, ref List<DecompToken> decomp)
     {
         ImGui.DockSpaceOverViewport();
         DrawMainMenuBar();
@@ -31,6 +33,7 @@ internal static partial class TinyCpuUi
         if (_drawDecompWindow) DrawDecompWindow(decomp, cpu.Reg.INST_PTR);
         if (_drawControlMenu) DrawCpuControlWindow(cpu);
         if (_drawTankFillExample) DrawTankFillExample(cpu.Memory);
+        if ((_currentCodeMode & CurrentCodeMode.Asm) != 0) TinyAsmIde.Render(ref cpu, ref decomp);
 
 
         var highlightOpcode = OpCode.NOOP;
@@ -48,8 +51,6 @@ internal static partial class TinyCpuUi
         }
     }
 
-    private static float _tankFillExample_tankLevel = 0.00f;
-    private static bool _tankFillExample_enable = false;
 
     private static void DrawTankFillExample(IMemory cpuMemory)
     {
@@ -114,6 +115,13 @@ internal static partial class TinyCpuUi
             {
                 ImGui.MenuItem("Tank Fill", "", ref _drawTankFillExample);
                 ImGui.EndMenu();
+            }
+
+            var aInt = (int)_currentCodeMode;
+            if (ImGui.CheckboxFlags("Asm", ref aInt, (int)CurrentCodeMode.Asm))
+            {
+                _currentCodeMode = (CurrentCodeMode)aInt;
+                
             }
         }
 
@@ -386,13 +394,13 @@ internal static partial class TinyCpuUi
 
             ImGui.Columns(1);
             ImGui.Separator();
-            // }
-            //
-            // ImGui.End();
-            //
-            //
-            // if (ImGui.Begin("TinyCpu - Memory - STR", ref _drawMemoryStrWindow))
-            // {
+        }
+
+        ImGui.End();
+
+
+        if (ImGui.Begin("TinyCpu - Memory - STR", ref _drawMemoryStrWindow))
+        {
             ImGui.Columns(2);
             ImGui.Text("Address");
             ImGui.NextColumn();

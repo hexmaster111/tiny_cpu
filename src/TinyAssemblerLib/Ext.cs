@@ -35,7 +35,6 @@ public static class Ext
         TokenType.MEM_READ => 2,
         TokenType.MEM_WRITE => 2,
         TokenType.SCCAT => 2,
-        TokenType.SSPLIT => 2,
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };
 

@@ -64,14 +64,12 @@ public static class Ext
             OpCode.SETREG_STRR_STRR => 1 + 1 + 1, //opcode byte byte
             OpCode.CCAT_STRR_STRR => 1 + 1 + 1, //opcode byte byte
             OpCode.CMP_STRR_STRR => 1 + 1 + 1, //opcode byte byte
-            OpCode.STRSPLT_STRR_INTC => 1 + 1 + 4, //opcode byte int
 
             OpCode.SETREG_STRR_STRC => throw new InvalidOperationException(), //len changes
             OpCode.CCAT_STRR_STRC => throw new InvalidOperationException(), //len changes
             OpCode.CMP_STRR_STRC => throw new InvalidOperationException(), //len changes
             OpCode.PUSH_STRC => throw new InvalidOperationException(), //len changes
 
-            OpCode.STRSPLT_STRR_INTR => 1 + 1 + 1, //opcode byte byte
             OpCode.MEM_READ_STRR_INTC => 1 + 1 + 4, //opcode byte int
             OpCode.MEM_READ_STRR_INTR => 1 + 1 + 1, //opcode byte byte
             OpCode.MEM_WRITE_STRR_INTC => 1 + 1 + 4, //opcode byte int
