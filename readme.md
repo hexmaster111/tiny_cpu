@@ -5,6 +5,11 @@ It has instructions!
 It has bytecodes!
 It has Assembly!
 
+## Tiny Asm IDE!
+
+![tiny_ide.png](img%2Ftiny_ide.png)
+
+
 ## Tiny Debugger!
 
 ```
